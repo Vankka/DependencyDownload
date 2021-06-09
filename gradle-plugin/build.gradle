@@ -1,11 +1,19 @@
 plugins {
     id 'java-gradle-plugin'
     id 'com.gradle.plugin-publish' version '0.14.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
-    implementation gradleApi()
+    compileOnly gradleApi()
     implementation project(':common')
+}
+
+jar.finalizedBy shadowJar
+
+shadowJar {
+    //noinspection GroovyAssignabilityCheck
+    archiveClassifier = ''
 }
 
 gradlePlugin {
