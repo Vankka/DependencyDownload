@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * The main class responsible for downloading, optionally relocating and loading in dependencies.
@@ -72,19 +73,16 @@ public class DependencyManager {
      */
     @SuppressWarnings("ConstantConditions")
     public void loadFromResource(URL resourceURL) throws IOException {
+        if (resourceURL == null) {
+            throw new NullPointerException("resourceURL");
+        }
         char[] buffer = new char[16];
 
         String output;
-        try (InputStreamReader reader = new InputStreamReader(resourceURL.openStream())) {
-            try (StringWriter writer = new StringWriter()) {
-                int result = 0;
-                while (result != -1) {
-                    result = reader.read(buffer);
-                    writer.write(buffer);
-                }
-                output = writer.toString();
-            }
-        }
+        InputStream inputStream = resourceURL.openStream();
+        List<String> lines = new BufferedReader(new InputStreamReader(inputStream))
+                .lines()
+                .collect(Collectors.toList());
 
         String hashingAlgorithm = null;
 
@@ -92,7 +90,7 @@ public class DependencyManager {
         String pattern = null;
         String replacement = null;
         List<String> include = null;
-        for (String line : output.split("\n")) {
+        for (String line : lines) {
             if (line.isEmpty()) {
                 continue;
             }
@@ -307,8 +305,9 @@ public class DependencyManager {
                 downloadFromRepository(dependency, repository, dependencyFile, digest);
 
                 String hash = HashUtil.getHash(digest);
-                if (!hash.equals(dependency.getHash())) {
-                    throw new RuntimeException("Failed to verify file hash: " + hash + " should've been: " + dependency.getHash());
+                String dependencyHash = dependency.getHash();
+                if (!hash.equals(dependencyHash)) {
+                    throw new RuntimeException("Failed to verify file hash: " + hash + " should've been: " + dependencyHash);
                 }
 
                 // Success
