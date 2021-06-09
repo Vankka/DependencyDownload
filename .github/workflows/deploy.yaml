@@ -1,0 +1,26 @@
+name: Deploy
+
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 8
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+      - name: Deploy with Gradle
+        run: |
+          echo "ossrhUsername=$SONATYPE_USERNAME" >> gradle.properties
+          echo "ossrhPassword=$SONATYPE_PASSWORD" >> gradle.properties
+          ./gradlew publishProject
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+          SONATYPE_KEY_PASS: ${{ secrets.SONATYPE_KEY_PASS }}
