@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'org.cadixdev.licenser' version '0.6.0'
+}
+
+version = '1.0.0-SNAPSHOT'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    group = 'dev.vankka.DependencyDownload'
+    version = rootProject.version
+
+    license {
+        header = rootProject.file('LICENSE_HEADER')
+        properties {
+            String inception = '2021'
+            String currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
+            year = inception == currentYear ? currentYear : inception + "-" + currentYear
+        }
+        include '**/*.java' // only java files
+    }
+}

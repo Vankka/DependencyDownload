@@ -1,0 +1,3 @@
+rootProject.name = 'DependencyDownload'
+
+include 'gradle-plugin', 'runtime', 'common'

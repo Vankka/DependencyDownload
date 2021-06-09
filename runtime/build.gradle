@@ -1,0 +1,84 @@
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    implementation 'me.lucko:jar-relocator:1.4'
+}
+
+jar {
+    archivesBaseName = rootProject.name
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+if (System.getenv('SONATYPE_KEY') == null && !project.hasProperty("signing.keyId")) {
+    // Don't even bother with signing/publishing if neither of these are set
+    return
+}
+
+task publishProject {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    dependsOn tasks.build
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+
+                pom {
+                    name = project.name
+                    packaging = 'jar'
+                    description = 'The library to download dependencies during runtime'
+                    url = 'https://github.com/Vankka/DependencyDownload'
+
+                    scm {
+                        connection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
+                        developerConnection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
+                        url = 'https://github.com/Vankka/DependencyDownload'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://www.opensource.org/licenses/mit-license.php'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'Vankka'
+                        }
+                    }
+                }
+            }
+        }
+
+        signing {
+            sign publishing.publications.maven
+
+            def key = System.getenv('SONATYPE_KEY')
+            if (key != null) {
+                useInMemoryPgpKeys(key, System.getenv('SONATYPE_KEY_PASS'))
+            }
+        }
+
+        repositories {
+            maven {
+                credentials {
+                    username findProperty('ossrhUsername')
+                    password findProperty('ossrhPassword')
+                }
+                url version.endsWith('-SNAPSHOT') ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            }
+        }
+    }
+
+    finalizedBy publish
+}
