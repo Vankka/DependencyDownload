@@ -22,7 +22,7 @@ public class DependencyDownloadGradlePlugin implements Plugin<Project> {
 
         TaskContainer tasks = project.getTasks();
         String taskName = "generateRuntimeDownloadResourceFor";
-        tasks.register(taskName + "RuntimeDownloadOnly", GenerateDependencyDownloadResourceTask.class, t -> t.convention(baseConfiguration));
-        tasks.register(taskName + "RuntimeDownload", GenerateDependencyDownloadResourceTask.class, t -> t.convention(compileConfiguration));
+        tasks.register(taskName + "RuntimeDownloadOnly", GenerateDependencyDownloadResourceTask.class, t -> t.configuration(baseConfiguration));
+        tasks.register(taskName + "RuntimeDownload", GenerateDependencyDownloadResourceTask.class, t -> t.configuration(compileConfiguration));
     }
 }

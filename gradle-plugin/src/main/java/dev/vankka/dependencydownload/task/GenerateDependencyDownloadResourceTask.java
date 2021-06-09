@@ -4,13 +4,13 @@ import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
 import dev.vankka.dependencydownload.util.HashUtil;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
+import org.gradle.api.provider.Property;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import javax.inject.Inject;
@@ -23,6 +23,9 @@ import java.util.*;
 
 public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask {
 
+    @Classpath
+    abstract Property<Configuration> getConfiguration();
+
     @OutputFile
     abstract RegularFileProperty getFileLocation();
 
@@ -32,21 +35,18 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     @Input
     abstract Property<String> getHashingAlgorithm();
 
-    @Classpath
-    abstract Property<Configuration> getConfiguration();
-
-    public void convention(Configuration configuration) {
-        getConfiguration().convention(configuration);
+    public void configuration(Configuration configuration) {
+        getConfiguration().set(configuration);
     }
 
     @Inject
     public GenerateDependencyDownloadResourceTask(ObjectFactory factory) {
+        getConfiguration().convention(
+                getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME));
         getFileLocation().convention(
-                factory.fileProperty().fileValue(new File(getResourceDirectory(), getConfiguration().get().getName() + ".txt"))
-        );
+                factory.fileProperty().fileValue(new File(getResourceDirectory(), getConfiguration().get().getName() + ".txt")));
         getIncludeRelocations().convention(true);
         getHashingAlgorithm().convention("SHA-256");
-        getConfiguration().convention(getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME));
     }
 
     private File getResourceDirectory() {
@@ -72,7 +72,13 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         String hashingAlgorithm = getHashingAlgorithm().get();
         result.add("===ALGORITHM " + hashingAlgorithm);
 
-        Configuration configuration = getConfiguration().get();
+        Property<Configuration> property = getConfiguration();
+        Configuration configuration;
+        if (property.isPresent()) {
+            configuration = property.get();
+        } else {
+            configuration = getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME);
+        }
         for (ResolvedDependency resolvedDependency : configuration.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
             for (String dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
                 result.add(dependency);
