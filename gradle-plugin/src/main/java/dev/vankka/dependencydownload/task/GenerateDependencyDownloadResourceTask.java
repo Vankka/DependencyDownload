@@ -189,12 +189,11 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             hash = HashUtil.getFileHash(file, hashingAlgorithm);
             break;
         }
-        if (hash == null) {
-            return Collections.emptyList();
-        }
 
         List<String> dependencies = new ArrayList<>();
-        dependencies.add(dependency.getModuleGroup() + ":" + dependency.getModuleName() + ":" + dependency.getModuleVersion() + " " + hash);
+        if (hash != null) {
+            dependencies.add(dependency.getModuleGroup() + ":" + dependency.getModuleName() + ":" + dependency.getModuleVersion() + " " + hash);
+        }
 
         for (ResolvedDependency child : dependency.getChildren()) {
             dependencies.addAll(
