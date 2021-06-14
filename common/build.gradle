@@ -2,6 +2,11 @@ jar {
     archivesBaseName = rootProject.name + '-common'
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 if (System.getenv('SONATYPE_KEY') == null && !project.hasProperty("signing.keyId")) {
     // Don't even bother with signing/publishing if neither of these are set
     return

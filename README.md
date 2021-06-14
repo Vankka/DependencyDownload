@@ -1,11 +1,10 @@
 # DependencyManager
 
-**Not yet released**
-
 A library to download, relocate & load dependencies during runtime.
 There is also a Gradle plugin to generate a metadata file, to avoid having to define the dependencies in code
 
-Uses [jar-relocator](https://github.com/lucko/jar-relocator/) for relocations during runtime
+Uses [jar-relocator](https://github.com/lucko/jar-relocator/) for relocations during runtime  
+Looking for something to use with Minecraft? [Check out MinecraftDependencyDownload](https://github.com/Vankka/MinecraftDependencyDownload/)
 
 ## Dependency
 ```groovy

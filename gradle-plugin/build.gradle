@@ -1,12 +1,16 @@
 plugins {
-    id 'java-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '0.14.0'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'com.gradle.plugin-publish' version '0.14.0' apply false
 }
 
 dependencies {
     compileOnly gradleApi()
     implementation project(':common')
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 jar.finalizedBy shadowJar
@@ -16,19 +20,88 @@ shadowJar {
     archiveClassifier = ''
 }
 
-gradlePlugin {
-    plugins {
-        runtimeDependencyDownload {
-            id = 'dev.vankka.dependencydownload.plugin'
-            displayName = 'DependencyDownload Plugin'
-            description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
-            implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
+if (!version.endsWith('-SNAPSHOT')) {
+    apply plugin: 'java-gradle-plugin'
+    apply plugin: 'com.gradle.plugin-publish'
+
+    // Doesn't allow snapshot versions, so snapshots are put on sonatype
+    gradlePlugin {
+        plugins {
+            runtimeDependencyDownload {
+                id = 'dev.vankka.dependencydownload.plugin'
+                displayName = 'DependencyDownload Plugin'
+                description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
+                implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
+            }
         }
     }
+
+    pluginBundle {
+        website = 'https://github.com/Vankka/DependencyDownload'
+        vcsUrl = 'https://github.com/Vankka/DependencyDownload'
+        tags = ['runtime', 'dependency', 'download']
+    }
+    return
 }
 
-pluginBundle {
-    website = 'https://github.com/Vankka/DependencyDownload'
-    vcsUrl = 'https://github.com/Vankka/DependencyDownload'
-    tags = ['runtime', 'dependency', 'download']
+task publishProject {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    dependsOn tasks.build
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+
+                pom {
+                    name = project.name
+                    packaging = 'jar'
+                    description = 'The Gradle plugin for DependencyDownload'
+                    url = 'https://github.com/Vankka/DependencyDownload'
+
+                    scm {
+                        connection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
+                        developerConnection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
+                        url = 'https://github.com/Vankka/DependencyDownload'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://www.opensource.org/licenses/mit-license.php'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'Vankka'
+                        }
+                    }
+                }
+            }
+        }
+
+        signing {
+            sign publishing.publications.maven
+
+            def key = System.getenv('SONATYPE_KEY')
+            if (key != null) {
+                useInMemoryPgpKeys(key, System.getenv('SONATYPE_KEY_PASS'))
+            }
+        }
+
+        repositories {
+            maven {
+                credentials {
+                    username findProperty('ossrhUsername')
+                    password findProperty('ossrhPassword')
+                }
+                url version.endsWith('-SNAPSHOT') ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : null
+            }
+        }
+    }
+
+    finalizedBy publish
 }
