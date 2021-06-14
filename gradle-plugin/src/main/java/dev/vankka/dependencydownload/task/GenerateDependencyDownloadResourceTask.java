@@ -79,11 +79,16 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         } else {
             configuration = getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME);
         }
+
+        List<String> dependencies = new ArrayList<>();
         for (ResolvedDependency resolvedDependency : configuration.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
             for (String dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
-                result.add(dependency);
+                if (!dependencies.contains(dependency)) {
+                    dependencies.add(dependency);
+                }
             }
         }
+        dependencies.forEach(result::add);
 
         if (getIncludeRelocations().get()) {
             shadowJar(result);
