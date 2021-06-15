@@ -1,4 +1,5 @@
 plugins {
+    id 'java-gradle-plugin'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
     id 'com.gradle.plugin-publish' version '0.14.0' apply false
 }
@@ -20,22 +21,21 @@ shadowJar {
     archiveClassifier = ''
 }
 
+gradlePlugin {
+    plugins {
+        runtimeDependencyDownload {
+            id = 'dev.vankka.dependencydownload.plugin'
+            displayName = 'DependencyDownload Plugin'
+            description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
+            implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
+        }
+    }
+}
+
 if (!version.endsWith('-SNAPSHOT')) {
-    apply plugin: 'java-gradle-plugin'
     apply plugin: 'com.gradle.plugin-publish'
 
     // Doesn't allow snapshot versions, so snapshots are put on sonatype
-    gradlePlugin {
-        plugins {
-            runtimeDependencyDownload {
-                id = 'dev.vankka.dependencydownload.plugin'
-                displayName = 'DependencyDownload Plugin'
-                description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
-                implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
-            }
-        }
-    }
-
     pluginBundle {
         website = 'https://github.com/Vankka/DependencyDownload'
         vcsUrl = 'https://github.com/Vankka/DependencyDownload'
