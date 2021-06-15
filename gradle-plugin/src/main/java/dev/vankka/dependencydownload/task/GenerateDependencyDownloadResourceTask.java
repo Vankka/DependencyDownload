@@ -26,6 +26,9 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     @Classpath
     abstract Property<Configuration> getConfiguration();
 
+    @Input
+    abstract Property<String> getFileName();
+
     @OutputFile
     abstract RegularFileProperty getFileLocation();
 
@@ -43,8 +46,9 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     public GenerateDependencyDownloadResourceTask(ObjectFactory factory) {
         getConfiguration().convention(
                 getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME));
+        getFileName().convention(getConfiguration().get().getName() + ".txt");
         getFileLocation().convention(
-                factory.fileProperty().fileValue(new File(getResourceDirectory(), getConfiguration().get().getName() + ".txt")));
+                factory.fileProperty().fileValue(new File(getResourceDirectory(), getFileName().get())));
         getIncludeRelocations().convention(true);
         getHashingAlgorithm().convention("SHA-256");
     }
