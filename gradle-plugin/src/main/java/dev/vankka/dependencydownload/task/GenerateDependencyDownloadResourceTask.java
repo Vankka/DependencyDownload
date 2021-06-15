@@ -37,6 +37,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
     public void configuration(Configuration configuration) {
         getConfiguration().set(configuration);
+        getFileLocation().convention(
+                getProject().getObjects().fileProperty().fileValue(new File(getResourceDirectory(), configuration.getName() + ".txt")));
     }
 
     @Inject
