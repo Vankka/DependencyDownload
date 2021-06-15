@@ -78,10 +78,9 @@ import dev.vankka.dependencydownload.task.GenerateDependencyDownloadResourceTask
 
 task generateResource(type: GenerateDependencyDownloadResourceTask) {
     configuration = project.configurations.runtimeDownload
-    fileName = 'runtimeDownload.txt'
-    fileLocation = sourceSets.getByName('main').getOutput().getResourcesDir()
     includeRelocations = true
     hashingAlgorithm = 'SHA-256'
+    fileLocation = sourceSets.getByName('main').getOutput().getResourcesDir()
 }
 ```
 
