@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -91,6 +92,7 @@ public class DependencyManager {
         String replacement = null;
         List<String> include = null;
         for (String line : lines) {
+            line = line.trim();
             if (line.isEmpty()) {
                 continue;
             }
@@ -98,13 +100,13 @@ public class DependencyManager {
             if (line.startsWith("===ALGORITHM")) {
                 String[] algorithmParts = line.split(" ");
                 if (algorithmParts.length != 2) {
-                    throw new IllegalArgumentException("Resource format is invalid");
+                    throw new IllegalArgumentException("Resource format is invalid: hashing algorithm: " + line);
                 }
                 hashingAlgorithm = algorithmParts[1];
                 continue;
             } else if (hashingAlgorithm == null) {
-                throw new IllegalArgumentException("Resource format is invalid");
-            } else if (line.startsWith("===RELOCATIONS")) {
+                throw new IllegalArgumentException("Resource format is invalid: no hashing algorithm");
+            } else if (line.startsWith("===RELOCATIONS") && relocationStep == -1) {
                 relocationStep = 0;
                 continue;
             } else if (relocationStep != -1) {
@@ -116,14 +118,27 @@ public class DependencyManager {
                         replacement = line;
                         break;
                     case 2:
-                        include = Arrays.asList(line.split(","));
-                        break;
                     case 3:
-                        List<String> exclude = Arrays.asList(line.split(","));
-                        relocations.add(new Relocation(pattern, replacement, include, exclude));
-                        include = null;
-                        relocationStep = 0;
-                        continue;
+                        if (!line.startsWith("[") || !line.endsWith("]")) {
+                            throw new IllegalArgumentException("Resource format is invalid: expecting a includes/excludes: " + line);
+                        }
+                        line = line.substring(1, line.length() - 1);
+
+                        List<String> values;
+                        if (!line.trim().isEmpty()) {
+                            values = Arrays.asList(line.split(","));
+                        } else {
+                            values = Collections.emptyList();
+                        }
+
+                        if (relocationStep == 2) {
+                            include = values;
+                        } else {
+                            relocations.add(new Relocation(pattern, replacement, include, values));
+                            include = null;
+                            relocationStep = 0;
+                            continue;
+                        }
                 }
 
                 relocationStep++;
@@ -132,14 +147,14 @@ public class DependencyManager {
 
             String[] parts = line.split(" ");
             if (parts.length != 2) {
-                throw new IllegalArgumentException("Resource format is invalid");
+                throw new IllegalArgumentException("Resource format is invalid: invalid dependency: " + line);
             }
             String maven = parts[0];
             String hash = parts[1];
 
             String[] mavenParts = maven.split(":");
             if (mavenParts.length != 3) {
-                throw new IllegalArgumentException("Resource format is invalid");
+                throw new IllegalArgumentException("Resource format is invalid: invalid dependency GAV: " + line);
             }
 
             dependencies.add(

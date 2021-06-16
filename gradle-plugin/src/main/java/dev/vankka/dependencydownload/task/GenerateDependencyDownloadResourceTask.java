@@ -167,8 +167,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         for (int index = 0; index < patterns.size(); index++) {
             result.add(patterns.get(index));
             result.add(replacements.get(index));
-            result.add(String.join(",", includes.get(index)));
-            result.add(String.join(",", excludes.get(index)));
+            result.add("[" + String.join(",", includes.get(index)) + "]");
+            result.add("[" + String.join(",", excludes.get(index)) + "]");
         }
     }
 
