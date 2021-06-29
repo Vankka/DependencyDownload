@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -199,7 +199,7 @@ public class DependencyManager {
             throw new IllegalStateException("Download has already been executed");
         }
         return forEachDependency(executor, dependency -> downloadDependency(dependency, repositories),
-                dependency -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact()));
+                (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact(), cause));
     }
 
     /**
@@ -230,7 +230,7 @@ public class DependencyManager {
         }
         step.set(2);
         return forEachDependency(executor, this::relocateDependency,
-                dependency -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact()));
+                (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause));
     }
 
     /**
@@ -262,11 +262,12 @@ public class DependencyManager {
         step.set(3);
 
         return forEachDependency(executor, dependency -> loadDependency(dependency, classpathAppender, currentStep == 2),
-                dependency -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact()));
+                (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause));
     }
 
     @SuppressWarnings("unchecked")
-    private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable, Function<Dependency, Throwable> exception) {
+    private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable,
+                                                        BiFunction<Dependency, Throwable, Throwable> dependencyException) {
         int size = dependencies.size();
         CompletableFuture<Void>[] futures = new CompletableFuture[size];
 
@@ -279,7 +280,8 @@ public class DependencyManager {
                     runnable.run(dependency);
                     future.complete(null);
                 } catch (Throwable t) {
-                    future.completeExceptionally(t);
+                    future.completeExceptionally(
+                            dependencyException.apply(dependency, t));
                 }
             };
 
