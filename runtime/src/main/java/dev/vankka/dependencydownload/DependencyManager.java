@@ -26,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -197,7 +198,8 @@ public class DependencyManager {
         if (!step.compareAndSet(0, 1)) {
             throw new IllegalStateException("Download has already been executed");
         }
-        return forEachDependency(executor, dependency -> downloadDependency(dependency, repositories));
+        return forEachDependency(executor, dependency -> downloadDependency(dependency, repositories),
+                dependency -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact()));
     }
 
     /**
@@ -227,7 +229,8 @@ public class DependencyManager {
             throw new IllegalArgumentException("Relocate has already been executed");
         }
         step.set(2);
-        return forEachDependency(executor, this::relocateDependency);
+        return forEachDependency(executor, this::relocateDependency,
+                dependency -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact()));
     }
 
     /**
@@ -258,11 +261,12 @@ public class DependencyManager {
         }
         step.set(3);
 
-        return forEachDependency(executor, dependency -> loadDependency(dependency, classpathAppender, currentStep == 2));
+        return forEachDependency(executor, dependency -> loadDependency(dependency, classpathAppender, currentStep == 2),
+                dependency -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact()));
     }
 
     @SuppressWarnings("unchecked")
-    private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable) {
+    private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable, Function<Dependency, Throwable> exception) {
         int size = dependencies.size();
         CompletableFuture<Void>[] futures = new CompletableFuture[size];
 
@@ -313,7 +317,7 @@ public class DependencyManager {
         }
         Files.createFile(dependencyFile.toPath());
 
-        RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency " + dependency.getMavenArtifact());
+        RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
         for (Repository repository : repositories) {
             try {
                 MessageDigest digest = MessageDigest.getInstance(dependency.getHashingAlgorithm());
@@ -351,6 +355,7 @@ public class DependencyManager {
     }
 
     private void relocateDependency(Dependency dependency) throws IOException {
+
         String fileName = dependency.getFileName();
         File dependencyFile = new File(cacheDirectory.toFile(), fileName);
         File relocatedFile = new File(cacheDirectory.toFile(), RELOCATED_FILE_PREFIX + fileName);
