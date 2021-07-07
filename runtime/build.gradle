@@ -4,7 +4,7 @@ repositories {
 
 dependencies {
     implementation project(':common')
-    implementation 'me.lucko:jar-relocator:1.4'
+    implementation 'me.lucko:jar-relocator:1.5'
 }
 
 jar {
