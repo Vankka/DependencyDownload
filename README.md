@@ -1,4 +1,6 @@
 # DependencyManager
+![Maven Central](https://img.shields.io/maven-central/v/dev.vankka.DependencyDownload/runtime?label=release)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka.DependencyDownload/runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 A library to download, relocate & load dependencies during runtime.
 There is also a Gradle plugin to generate a metadata file, to avoid having to define the dependencies in code
