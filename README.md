@@ -51,7 +51,7 @@ manager.loadAll(executor, classpathAppender).join(); // ClasspathAppender is a i
 ## Gradle plugin
 ```groovy
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.0.0'
+    id 'dev.vankka.dependencydownload.plugin' version '1.0.1'
 }
 
 dependencies {
@@ -89,7 +89,7 @@ Bring the jar minifying to the next extreme
 ```groovy
 import dev.vankka.dependencydownload.task.GenerateDependencyDownloadResourceTask
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.0.0'
+    id 'dev.vankka.dependencydownload.plugin' version '1.0.1'
 }
 
 configurations {
@@ -101,7 +101,7 @@ repositories {
 }
 
 dependencies {
-    implementation('dev.vankka.DependencyDownload:runtime:1.0.0') {
+    implementation('dev.vankka.DependencyDownload:runtime:1.0.1') {
         exclude module: 'jar-relocator'
     }
     jarRelocator 'me.lucko:jar-relocator:1.4'
