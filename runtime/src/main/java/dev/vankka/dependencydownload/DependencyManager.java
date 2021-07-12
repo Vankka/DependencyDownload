@@ -61,11 +61,27 @@ public class DependencyManager {
     }
 
     /**
+     * Gets the dependencies in this {@link DependencyManager}.
+     * @return a unmodifiable list of dependencies
+     */
+    public List<Dependency> getDependencies() {
+        return Collections.unmodifiableList(dependencies);
+    }
+
+    /**
      * Adds a relocation to this {@link DependencyManager}.
      * @param relocation the relocation
      */
     public void addRelocation(Relocation relocation) {
         this.relocations.add(relocation);
+    }
+
+    /**
+     * Gets the relocations in this {@link DependencyManager}.
+     * @return a unmodifiable set of relocations
+     */
+    public Set<Relocation> getRelocations() {
+        return Collections.unmodifiableSet(relocations);
     }
 
     /**
