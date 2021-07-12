@@ -32,6 +32,11 @@ public class StandardDependency implements Dependency {
     }
 
     @Override
+    public String getSnapshotVersion() {
+        return null;
+    }
+
+    @Override
     public String getHash() {
         return hash;
     }
@@ -39,5 +44,10 @@ public class StandardDependency implements Dependency {
     @Override
     public String getHashingAlgorithm() {
         return hashingAlgorithm;
+    }
+
+    @Override
+    public boolean isSnapshot() {
+        return false;
     }
 }

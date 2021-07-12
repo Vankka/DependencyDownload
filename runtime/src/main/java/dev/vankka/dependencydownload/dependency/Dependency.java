@@ -3,6 +3,7 @@ package dev.vankka.dependencydownload.dependency;
 /**
  * A maven dependency.
  */
+@SuppressWarnings("unused") // API
 public interface Dependency {
 
     String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
@@ -26,6 +27,13 @@ public interface Dependency {
     String getVersion();
 
     /**
+     * The timestamped snapshot version.
+     * @return the timestamped snapshot version or {@code null} if this isn't a snapshot dependency.
+     * @see #isSnapshot()
+     */
+    String getSnapshotVersion();
+
+    /**
      * The hash of the dependency, this is checked against the downloaded file.
      * @return the hash of the dependency archive
      * @see #getHashingAlgorithm()
@@ -38,6 +46,12 @@ public interface Dependency {
      * @see #getHash()
      */
     String getHashingAlgorithm();
+
+    /**
+     * If this is a snapshot dependency.
+     * @return true if this dependency is a snapshot
+     */
+    boolean isSnapshot();
 
     /**
      * Returns the file name for the end of the maven path.

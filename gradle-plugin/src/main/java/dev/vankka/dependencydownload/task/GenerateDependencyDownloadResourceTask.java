@@ -4,13 +4,17 @@ import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
 import dev.vankka.dependencydownload.util.HashUtil;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
-import org.gradle.api.provider.Property;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.internal.artifacts.repositories.resolver.MavenUniqueSnapshotComponentIdentifier;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import javax.inject.Inject;
@@ -187,6 +191,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
     private List<String> processDependency(ResolvedDependency dependency, String hashingAlgorithm) throws NoSuchAlgorithmException, IOException {
         String hash = null;
+        String snapshotVersion = null;
         for (ResolvedArtifact moduleArtifact : dependency.getModuleArtifacts()) {
             if (!moduleArtifact.getType().equals("jar")) {
                 continue;
@@ -194,12 +199,28 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
             File file = moduleArtifact.getFile();
             hash = HashUtil.getFileHash(file, hashingAlgorithm);
+
+            ComponentArtifactIdentifier componentArtifactIdentifier = moduleArtifact.getId();
+            ComponentIdentifier componentIdentifier = componentArtifactIdentifier.getComponentIdentifier();
+            if (componentIdentifier instanceof MavenUniqueSnapshotComponentIdentifier) {
+                snapshotVersion = ((MavenUniqueSnapshotComponentIdentifier) componentIdentifier).getTimestampedVersion();
+            }
             break;
         }
 
         List<String> dependencies = new ArrayList<>();
         if (hash != null) {
-            dependencies.add(dependency.getModuleGroup() + ":" + dependency.getModuleName() + ":" + dependency.getModuleVersion() + " " + hash);
+            String dependencyGroupName = dependency.getModuleGroup() + ":" + dependency.getModuleName();
+            String version = dependency.getModuleVersion();
+            String finalVersion = snapshotVersion != null ? version + ":" + snapshotVersion : version;
+            if (finalVersion.endsWith("-SNAPSHOT")) {
+                Logger logger = getLogger();
+                logger.warn("");
+                logger.warn(dependencyGroupName + " resolved to a non-versioned snapshot version: " + version);
+                logger.warn("This is usually caused by the dependency being resolved from mavenLocal()");
+                logger.warn("and the local repository containing the dependency with the version '" + version + "' (without a timestamp)");
+            }
+            dependencies.add(dependencyGroupName + ":" + finalVersion + " " + hash);
         }
 
         for (ResolvedDependency child : dependency.getChildren()) {

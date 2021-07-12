@@ -2,6 +2,7 @@ package dev.vankka.dependencydownload;
 
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.dependency.SnapshotDependency;
 import dev.vankka.dependencydownload.dependency.StandardDependency;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.util.ExceptionalConsumer;
@@ -154,19 +155,32 @@ public class DependencyManager {
             String hash = parts[1];
 
             String[] mavenParts = maven.split(":");
-            if (mavenParts.length != 3) {
-                throw new IllegalArgumentException("Resource format is invalid: invalid dependency GAV: " + line);
+            int partCount = mavenParts.length;
+            if (partCount < 3 || partCount > 4) {
+                throw new IllegalArgumentException("Resource format is invalid: invalid dependency GAV: " + maven + " (" + partCount + ")");
             }
 
-            dependencies.add(
-                    new StandardDependency(
-                            mavenParts[0],
-                            mavenParts[1],
-                            mavenParts[2],
-                            hash,
-                            hashingAlgorithm
-                    )
-            );
+            Dependency dependency;
+            if (partCount == 3) {
+                dependency = new StandardDependency(
+                        mavenParts[0],
+                        mavenParts[1],
+                        mavenParts[2],
+                        hash,
+                        hashingAlgorithm
+                );
+            } else {
+                dependency = new SnapshotDependency(
+                        mavenParts[0],
+                        mavenParts[1],
+                        mavenParts[2],
+                        mavenParts[3],
+                        hash,
+                        hashingAlgorithm
+                );
+            }
+
+            dependencies.add(dependency);
         }
         if (relocationStep > 1) { // has pattern & replacement w/o include and/or exclude
             relocations.add(new Relocation(pattern, replacement, include, null));
