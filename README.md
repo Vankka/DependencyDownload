@@ -1,6 +1,7 @@
 # DependencyManager
 ![Maven Central](https://img.shields.io/maven-central/v/dev.vankka.dependencydownload/runtime?label=release)
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka.dependencydownload/runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)
+![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/dev.vankka.dependencydownload.plugin?label=gradle%20plugin)
 
 A library to download, relocate & load dependencies during runtime.
 There is also a Gradle plugin to generate a metadata file, to avoid having to define the dependencies in code
@@ -15,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.vankka.dependencydownload:runtime:1.0.0'
+    implementation 'dev.vankka.dependencydownload:runtime:1.0.2'
 }
 ```
 
@@ -30,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.vankka.dependencydownload:runtime:1.0.1-SNAPSHOT'
+    implementation 'dev.vankka.dependencydownload:runtime:1.0.3-SNAPSHOT'
 }
 ```
 </details>
@@ -53,7 +54,7 @@ manager.loadAll(executor, classpathAppender).join(); // ClasspathAppender is a i
 ## Gradle plugin
 ```groovy
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.0.1'
+    id 'dev.vankka.dependencydownload.plugin' version '1.0.2'
 }
 
 dependencies {
@@ -91,7 +92,7 @@ Bring the jar minifying to the next extreme
 ```groovy
 import dev.vankka.dependencydownload.task.GenerateDependencyDownloadResourceTask
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.0.1'
+    id 'dev.vankka.dependencydownload.plugin' version '1.0.2'
 }
 
 configurations {
@@ -103,7 +104,7 @@ repositories {
 }
 
 dependencies {
-    implementation('dev.vankka.dependencydownload:runtime:1.0.1') {
+    implementation('dev.vankka.dependencydownload:runtime:1.0.2') {
         exclude module: 'jar-relocator'
     }
     jarRelocator 'me.lucko:jar-relocator:1.4'
