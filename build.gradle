@@ -10,7 +10,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
 
-    group = 'dev.vankka.DependencyDownload'
+    group = 'dev.vankka.dependencydownload'
     version = rootProject.version
 
     license {

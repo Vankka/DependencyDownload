@@ -1,6 +1,6 @@
 # DependencyManager
-![Maven Central](https://img.shields.io/maven-central/v/dev.vankka.DependencyDownload/runtime?label=release)
-![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka.DependencyDownload/runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)
+![Maven Central](https://img.shields.io/maven-central/v/dev.vankka.dependencydownload/runtime?label=release)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka.dependencydownload/runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 A library to download, relocate & load dependencies during runtime.
 There is also a Gradle plugin to generate a metadata file, to avoid having to define the dependencies in code
@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.vankka.DependencyDownload:runtime:1.0.0'
+    implementation 'dev.vankka.dependencydownload:runtime:1.0.0'
 }
 ```
 
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.vankka.DependencyDownload:runtime:1.0.1-SNAPSHOT'
+    implementation 'dev.vankka.dependencydownload:runtime:1.0.1-SNAPSHOT'
 }
 ```
 </details>
@@ -103,7 +103,7 @@ repositories {
 }
 
 dependencies {
-    implementation('dev.vankka.DependencyDownload:runtime:1.0.1') {
+    implementation('dev.vankka.dependencydownload:runtime:1.0.1') {
         exclude module: 'jar-relocator'
     }
     jarRelocator 'me.lucko:jar-relocator:1.4'
