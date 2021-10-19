@@ -83,17 +83,21 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         if (property.isPresent()) {
             configuration = property.get();
         } else {
-            configuration = getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME);
+            throw new IllegalArgumentException("configuration must be provided");
         }
 
         List<String> dependencies = new ArrayList<>();
-        for (ResolvedDependency resolvedDependency : configuration.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
-            for (String dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
-                if (!dependencies.contains(dependency)) {
-                    dependencies.add(dependency);
+        for (Configuration config : getConfigurations(configuration)) {
+            System.out.println(config.getName());
+            for (ResolvedDependency resolvedDependency : config.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
+                for (String dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
+                    if (!dependencies.contains(dependency)) {
+                        dependencies.add(dependency);
+                    }
                 }
             }
         }
+
         dependencies.forEach(result::add);
 
         if (getIncludeRelocations().get()) {
@@ -114,6 +118,15 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         try (FileWriter writer = new FileWriter(dependenciesFile)) {
             writer.append(result.toString());
         }
+    }
+
+    private Set<Configuration> getConfigurations(Configuration configuration) {
+        Set<Configuration> configurations = new HashSet<>();
+        configurations.add(configuration);
+        for (Configuration config : configuration.getExtendsFrom()) {
+            configurations.addAll(getConfigurations(config));
+        }
+        return configurations;
     }
 
     @SuppressWarnings("unchecked")
