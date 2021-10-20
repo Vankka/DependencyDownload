@@ -27,7 +27,7 @@ import java.util.*;
 
 public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask {
 
-    @Classpath
+    @Input
     abstract Property<Configuration> getConfiguration();
 
     @OutputDirectory
