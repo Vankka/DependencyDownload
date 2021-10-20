@@ -88,7 +88,6 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
         List<String> dependencies = new ArrayList<>();
         for (Configuration config : getConfigurations(configuration)) {
-            System.out.println(config.getName());
             for (ResolvedDependency resolvedDependency : config.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
                 for (String dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
                     if (!dependencies.contains(dependency)) {
