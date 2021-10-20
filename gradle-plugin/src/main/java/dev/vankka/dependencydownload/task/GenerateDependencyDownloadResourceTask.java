@@ -30,8 +30,11 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     @Classpath
     abstract Property<Configuration> getConfiguration();
 
-    @OutputFile
+    @OutputDirectory
     abstract RegularFileProperty getFileLocation();
+
+    @Input
+    abstract Property<String> getFile();
 
     @Input
     abstract Property<Boolean> getIncludeRelocations();
@@ -42,7 +45,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     public void configuration(Configuration configuration) {
         getConfiguration().set(configuration);
         getFileLocation().convention(
-                getProject().getObjects().fileProperty().fileValue(new File(getResourceDirectory(), configuration.getName() + ".txt")));
+                getProject().getObjects().fileProperty().fileValue(getResourceDirectory(configuration)));
+        getFile().convention(configuration.getName() + ".txt");
     }
 
     @Inject
@@ -50,27 +54,39 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         getConfiguration().convention(
                 getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME));
         getFileLocation().convention(
-                factory.fileProperty().fileValue(new File(getResourceDirectory(), getConfiguration().get().getName() + ".txt")));
+                factory.fileProperty().fileValue(getResourceDirectory(getConfiguration().get())));
+        getFile().convention(getConfiguration().get().getName() + ".txt");
         getIncludeRelocations().convention(true);
         getHashingAlgorithm().convention("SHA-256");
     }
 
-    private File getResourceDirectory() {
+    private File getResourceDirectory(Configuration configuration) {
         JavaPluginConvention javaPluginConvention = getProject().getConvention().getPlugin(JavaPluginConvention.class);
         SourceSetContainer sourceSets = javaPluginConvention.getSourceSets();
-        SourceSet sourceSet = sourceSets.getByName("main");
+        SourceSet sourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
         SourceSetOutput output = sourceSet.getOutput();
-        File resourcesDirectory = output.getResourcesDir();
-        if (resourcesDirectory == null) {
-            throw new IllegalStateException("Resources output directory could not be retrieved");
+
+        // Use existing
+        String configurationName = configuration.getName();
+        for (File dir : output.getDirs()) {
+            if (dir.getName().equals(configurationName)) {
+                return dir;
+            }
         }
-        return resourcesDirectory;
+
+        // Create new
+        File generatedResourcesDir = new File(getProject().getBuildDir(), "generated-resources");
+        File dependencyDownloadResources = new File(generatedResourcesDir, configurationName);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("builtBy", configuration);
+        output.dir(properties, dependencyDownloadResources);
+        return dependencyDownloadResources;
     }
 
     @TaskAction
     public void run() throws NoSuchAlgorithmException, IOException {
-        // Get a resources directory for the main source set of the JavaPlugin
-        File resourcesDirectory = getResourceDirectory();
+        // Get the resources directory for this configuration
+        File resourcesDirectory = getResourceDirectory(getConfiguration().get());
 
         // Generate the file contents
         StringJoiner result = new StringJoiner("\n");
@@ -108,7 +124,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             Files.createDirectories(resourcesDirectory.toPath());
         }
 
-        File dependenciesFile = getFileLocation().get().getAsFile();
+        File dependenciesFile = new File(getFileLocation().get().getAsFile(), getFile().get());
         if (dependenciesFile.exists()) {
             Files.delete(dependenciesFile.toPath());
         }

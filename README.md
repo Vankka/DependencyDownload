@@ -83,7 +83,7 @@ task generateResource(type: GenerateDependencyDownloadResourceTask) {
     configuration = project.configurations.runtimeDownload
     includeRelocations = true
     hashingAlgorithm = 'SHA-256'
-    fileLocation = sourceSets.getByName('main').getOutput().getResourcesDir()
+    file = 'dependencies.txt'
 }
 ```
 
