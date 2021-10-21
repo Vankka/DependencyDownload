@@ -127,6 +127,10 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         File dependenciesFile = new File(getFileLocation().get().getAsFile(), getFile().get());
         if (dependenciesFile.exists()) {
             Files.delete(dependenciesFile.toPath());
+        } else {
+            // Create parent directory if it doesn't exist
+            //noinspection ResultOfMethodCallIgnored
+            dependenciesFile.getParentFile().mkdirs();
         }
         Files.createFile(dependenciesFile.toPath());
 
