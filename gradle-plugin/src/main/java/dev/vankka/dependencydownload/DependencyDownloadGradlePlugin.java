@@ -27,7 +27,6 @@ public class DependencyDownloadGradlePlugin implements Plugin<Project> {
         //
         ConfigurationContainer configurations = project.getConfigurations();
         Configuration baseConfiguration = configurations.create(BASE_CONFIGURATION_NAME);
-        configurations.getByName("runtimeElements").extendsFrom(baseConfiguration);
 
         Configuration compileConfiguration = configurations.create(COMPILE_CONFIGURATION_NAME);
         configurations.getByName("compileOnly").extendsFrom(compileConfiguration);
