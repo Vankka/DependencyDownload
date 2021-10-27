@@ -5,6 +5,7 @@ import dev.vankka.mcdependencydownload.classloader.JarInJarClassLoader;
 /**
  * A bootstrap that is loaded in by a {@code ILoader} from the loader module.
  */
+@SuppressWarnings("unused") // API
 public abstract class AbstractBootstrap {
 
     private final JarInJarClassLoader classLoader;

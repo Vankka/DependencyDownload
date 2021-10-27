@@ -12,6 +12,7 @@ import java.net.URL;
 /**
  * A bootstrap loader, {@link #initialize()} should be called from the constructor.
  */
+@SuppressWarnings("unused") // API
 public interface ILoader {
 
     /**
@@ -49,10 +50,9 @@ public interface ILoader {
     }
 
     /**
-     * The fully qualified class name for the bootstrap class, this class usually extends {@link dev.vankka.mcdependencydownload.bootstrap.AbstractBootstrap}.
+     * The fully qualified class name for the bootstrap class, this class usually extends {@code AbstractBootstrap}.
      * @return the bootstrap class name
      */
-    @SuppressWarnings("JavadocReference") // Not available here
     String getBootstrapClassName();
 
     /**
