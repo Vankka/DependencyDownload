@@ -8,10 +8,20 @@ version = '1.0.3-SNAPSHOT'
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
 
     group = 'dev.vankka.dependencydownload'
     version = rootProject.version
+
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
 
     license {
         header = rootProject.file('LICENSE_HEADER')

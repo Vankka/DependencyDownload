@@ -2,9 +2,8 @@ jar {
     archivesBaseName = rootProject.name + '-common'
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
+dependencies {
+    compileOnlyApi 'org.jetbrains:annotations:22.0.0'
 }
 
 if (System.getenv('SONATYPE_KEY') == null && !project.hasProperty("signing.keyId")) {

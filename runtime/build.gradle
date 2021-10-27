@@ -1,9 +1,5 @@
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    implementation project(':common')
+    api project(':common')
     implementation 'me.lucko:jar-relocator:1.5'
 }
 
@@ -35,7 +31,7 @@ task publishProject {
                 pom {
                     name = project.name
                     packaging = 'jar'
-                    description = 'The library to download dependencies during runtime'
+                    description = 'A library to download dependencies during runtime'
                     url = 'https://github.com/Vankka/DependencyDownload'
 
                     scm {
