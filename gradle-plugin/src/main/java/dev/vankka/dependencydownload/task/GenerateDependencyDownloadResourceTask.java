@@ -1,7 +1,9 @@
 package dev.vankka.dependencydownload.task;
 
 import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
+import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.util.HashUtil;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -21,6 +23,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -37,17 +40,12 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     abstract Property<String> getFile();
 
     @Input
-    abstract Property<Boolean> getIncludeRelocations();
+    abstract Property<Boolean> getIncludeShadowJarRelocations();
 
     @Input
     abstract Property<String> getHashingAlgorithm();
 
-    public void configuration(Configuration configuration) {
-        getConfiguration().set(configuration);
-        getFileLocation().convention(
-                getProject().getObjects().fileProperty().fileValue(getResourceDirectory(configuration)));
-        getFile().convention(configuration.getName() + ".txt");
-    }
+    private List<Relocation> relocations = new ArrayList<>();
 
     @Inject
     public GenerateDependencyDownloadResourceTask(ObjectFactory factory) {
@@ -56,8 +54,58 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         getFileLocation().convention(
                 factory.fileProperty().fileValue(getResourceDirectory(getConfiguration().get())));
         getFile().convention(getConfiguration().get().getName() + ".txt");
-        getIncludeRelocations().convention(true);
+        getIncludeShadowJarRelocations().convention(true);
         getHashingAlgorithm().convention("SHA-256");
+    }
+
+    //
+    // Relocations
+    //
+
+    public GenerateDependencyDownloadResourceTask relocate(String pattern, String destination) {
+        return relocate(pattern, destination, null);
+    }
+
+    public GenerateDependencyDownloadResourceTask relocate(String pattern, String destination, Action<Relocation> configure) {
+        Relocation relocation = new Relocation(pattern, destination, new ArrayList<>(), new ArrayList<>());
+        addRelocator(relocation, configure);
+        return this;
+    }
+
+    public GenerateDependencyDownloadResourceTask relocate(Relocation relocation) {
+        addRelocator(relocation, null);
+        return this;
+    }
+
+    public GenerateDependencyDownloadResourceTask relocate(Class<? extends Relocation> relocationClass)
+            throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
+        return relocate(relocationClass, null);
+    }
+
+    public <R extends Relocation> GenerateDependencyDownloadResourceTask relocate(Class<R> relocatorClass, Action<R> configure)
+            throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        R relocator = relocatorClass.getDeclaredConstructor().newInstance();
+        addRelocator(relocator, configure);
+        return this;
+    }
+
+    private <R extends Relocation> void addRelocator(R relocation, Action<R> configure) {
+        if (configure != null) {
+            configure.execute(relocation);
+        }
+
+        relocations.add(relocation);
+    }
+
+    //
+    // Utility methods
+    //
+
+    public void configuration(Configuration configuration) {
+        getConfiguration().set(configuration);
+        getFileLocation().convention(
+                getProject().getObjects().fileProperty().fileValue(getResourceDirectory(configuration)));
+        getFile().convention(configuration.getName() + ".txt");
     }
 
     private File getResourceDirectory(Configuration configuration) {
@@ -82,6 +130,10 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         output.dir(properties, dependencyDownloadResources);
         return dependencyDownloadResources;
     }
+
+    //
+    // Action
+    //
 
     @TaskAction
     public void run() throws NoSuchAlgorithmException, IOException {
@@ -115,8 +167,24 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
         dependencies.forEach(result::add);
 
-        if (getIncludeRelocations().get()) {
-            shadowJar(result);
+        List<Relocation> relocations = new ArrayList<>();
+        if (getIncludeShadowJarRelocations().get()) {
+            shadowJar(relocations);
+        }
+
+        for (Relocation relocation : this.relocations) {
+            relocations.removeIf(rel -> relocation.getPattern().equals(rel.getPattern()));
+            relocations.add(relocation);
+        }
+
+        if (!relocations.isEmpty()) {
+            result.add("===RELOCATIONS");
+            for (Relocation relocation : relocations) {
+                result.add(relocation.getPattern());
+                result.add(relocation.getShadedPattern());
+                result.add("[" + String.join(",", relocation.getIncludes()) + "]");
+                result.add("[" + String.join(",", relocation.getExcludes()) + "]");
+            }
         }
 
         // Save the file
@@ -149,7 +217,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     }
 
     @SuppressWarnings("unchecked")
-    private void shadowJar(StringJoiner result) {
+    private void shadowJar(List<Relocation> relocations) {
         Task shadowJar = getProject().getTasksByName("shadowJar", true)
                 .stream().findAny().orElse(null);
         if (shadowJar == null) {
@@ -179,7 +247,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             Object value = entry.getValue();
             String key = keyParts[2];
             switch (key) {
-                case "pathPattern":
+                case "pattern":
                     set(patterns, index, (String) value);
                     break;
                 case "shadedPattern":
@@ -194,17 +262,13 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             }
         }
 
-        if (patterns.isEmpty()) {
-            // Don't include the relocation line if there are no relocations
-            return;
-        }
-
-        result.add("===RELOCATIONS");
         for (int index = 0; index < patterns.size(); index++) {
-            result.add(patterns.get(index));
-            result.add(replacements.get(index));
-            result.add("[" + String.join(",", includes.get(index)) + "]");
-            result.add("[" + String.join(",", excludes.get(index)) + "]");
+            relocations.add(new Relocation(
+                    patterns.get(index),
+                    replacements.get(index),
+                    new ArrayList<>(includes.get(index)),
+                    new ArrayList<>(excludes.get(index))
+            ));
         }
     }
 
