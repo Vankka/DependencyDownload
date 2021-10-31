@@ -399,6 +399,7 @@ public class DependencyManager {
      * Removes files that are not known dependencies of this {@link DependencyManager} from the {@link #getCacheDirectory()}.
      * <b>
      * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
+     * </b>
      *
      * @throws IOException if listing files in the cache directory or deleting files in it fails
      * @see #getAllPaths(boolean)
