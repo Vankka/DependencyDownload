@@ -345,6 +345,45 @@ public class DependencyManager {
                 (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause));
     }
 
+    /**
+     * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded.
+     *
+     * @param dependency the dependency.
+     * @return the path for the dependency
+     */
+    public Path getPathForDependency(Dependency dependency) {
+        String fileName = dependency.getStoredFileName();
+        return cacheDirectory.resolve(fileName);
+    }
+
+    /**
+     * Gets the {@link Path} where the given {@link Dependency} will be stored once relocated.
+     *
+     * @param dependency the dependency.
+     * @return the path for the dependency
+     */
+    public Path getRelocatedPathForDependency(Dependency dependency) {
+        String fileName = dependency.getStoredFileName();
+        return cacheDirectory.resolve(RELOCATED_FILE_PREFIX + fileName);
+    }
+
+    /**
+     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager},
+     * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
+     * @param includeRelocated if relocated paths should also be included
+     * @return paths to all dependencies (and optionally relocated dependencies)
+     */
+    public Set<Path> getAllPaths(boolean includeRelocated) {
+        Set<Path> paths = new HashSet<>();
+        for (Dependency dependency : dependencies) {
+            paths.add(getPathForDependency(dependency));
+            if (includeRelocated) {
+                paths.add(getRelocatedPathForDependency(dependency));
+            }
+        }
+        return paths;
+    }
+
     @SuppressWarnings("unchecked")
     private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable,
                                                         BiFunction<Dependency, Throwable, Throwable> dependencyException) {
@@ -386,24 +425,23 @@ public class DependencyManager {
             Files.createDirectories(cacheDirectory);
         }
 
-        String fileName = dependency.getFileName();
-        File dependencyFile = new File(cacheDirectory.toFile(), fileName);
-        if (dependencyFile.exists()) {
-            String fileHash = HashUtil.getFileHash(dependencyFile, dependency.getHashingAlgorithm());
+        Path dependencyPath = getPathForDependency(dependency);
+        if (Files.exists(dependencyPath)) {
+            String fileHash = HashUtil.getFileHash(dependencyPath.toFile(), dependency.getHashingAlgorithm());
             if (fileHash.equals(dependency.getHash())) {
                 // This dependency is already downloaded & the hash matches
                 return;
             } else {
-                Files.delete(dependencyFile.toPath());
+                Files.delete(dependencyPath);
             }
         }
-        Files.createFile(dependencyFile.toPath());
+        Files.createFile(dependencyPath);
 
         RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
         for (Repository repository : repositories) {
             try {
                 MessageDigest digest = MessageDigest.getInstance(dependency.getHashingAlgorithm());
-                downloadFromRepository(dependency, repository, dependencyFile, digest);
+                downloadFromRepository(dependency, repository, dependencyPath, digest);
 
                 String hash = HashUtil.getHash(digest);
                 String dependencyHash = dependency.getHash();
@@ -414,19 +452,19 @@ public class DependencyManager {
                 // Success
                 return;
             } catch (Throwable e) {
-                Files.deleteIfExists(dependencyFile.toPath());
+                Files.deleteIfExists(dependencyPath);
                 failure.addSuppressed(e);
             }
         }
         throw failure;
     }
 
-    private void downloadFromRepository(Dependency dependency, Repository repository, File dependencyFile, MessageDigest digest) throws Throwable {
+    private void downloadFromRepository(Dependency dependency, Repository repository, Path dependencyPath, MessageDigest digest) throws Throwable {
         HttpsURLConnection connection = repository.openConnection(dependency);
 
         byte[] buffer = new byte[4096];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {
-            try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(dependencyFile))) {
+            try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(dependencyPath.toFile()))) {
                 int total;
                 while ((total = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, total);
@@ -437,9 +475,8 @@ public class DependencyManager {
     }
 
     private void relocateDependency(Dependency dependency, JarRelocatorHelper helper) {
-        String fileName = dependency.getFileName();
-        File dependencyFile = new File(cacheDirectory.toFile(), fileName);
-        File relocatedFile = new File(cacheDirectory.toFile(), RELOCATED_FILE_PREFIX + fileName);
+        Path dependencyFile = getPathForDependency(dependency);
+        Path relocatedFile = getRelocatedPathForDependency(dependency);
 
         try {
             helper.run(dependencyFile, relocatedFile, relocations);
@@ -451,9 +488,10 @@ public class DependencyManager {
     }
 
     private void loadDependency(Dependency dependency, ClasspathAppender classpathAppender, boolean relocated) throws MalformedURLException {
-        String fileName = dependency.getFileName();
-        File relocatedFile = new File(cacheDirectory.toFile(), (relocated ? RELOCATED_FILE_PREFIX : "") + fileName);
+        Path fileToLoad = relocated
+                          ? getRelocatedPathForDependency(dependency)
+                          : getPathForDependency(dependency);
 
-        classpathAppender.appendFileToClasspath(relocatedFile.toPath());
+        classpathAppender.appendFileToClasspath(fileToLoad);
     }
 }

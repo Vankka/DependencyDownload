@@ -62,6 +62,14 @@ public interface Dependency {
     }
 
     /**
+     * Returns the file name when stored to disk.
+     * @return the file name for storing the dependency
+     */
+    default String getStoredFileName() {
+        return getGroupId() + '-' + getArtifactId() + '-' + getVersion() + ".jar";
+    }
+
+    /**
      * The path to this dependency on a maven repository, without the protocol, domain or slash at the beginning.
      * @return the path to this dependency's jar file on a maven repository
      */

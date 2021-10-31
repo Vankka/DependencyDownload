@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class JarRelocatorHelper {
         }
     }
 
-    public void run(File from, File to, Set<Relocation> relocations) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void run(Path from, Path to, Set<Relocation> relocations) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         Set<Object> mappedRelocations = new HashSet<>();
 
         for (Relocation relocation : relocations) {
