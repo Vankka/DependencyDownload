@@ -50,6 +50,14 @@ public class DependencyManager {
     }
 
     /**
+     * The cache directory for this {@link DependencyManager}.
+     * @return the cache directory
+     */
+    public Path getCacheDirectory() {
+        return cacheDirectory;
+    }
+
+    /**
      * Adds a dependency to this {@link DependencyManager}.
      * @param dependency the dependency
      */
@@ -350,6 +358,7 @@ public class DependencyManager {
      *
      * @param dependency the dependency.
      * @return the path for the dependency
+     * @see #getRelocatedPathForDependency(Dependency)
      */
     public Path getPathForDependency(Dependency dependency) {
         String fileName = dependency.getStoredFileName();
@@ -372,6 +381,8 @@ public class DependencyManager {
      * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
      * @param includeRelocated if relocated paths should also be included
      * @return paths to all dependencies (and optionally relocated dependencies)
+     * @see #getPathForDependency(Dependency)
+     * @see #getRelocatedPathForDependency(Dependency)
      */
     public Set<Path> getAllPaths(boolean includeRelocated) {
         Set<Path> paths = new HashSet<>();
@@ -382,6 +393,28 @@ public class DependencyManager {
             }
         }
         return paths;
+    }
+
+    /**
+     * Removes files that are not known dependencies of this {@link DependencyManager} from the {@link #getCacheDirectory()}.
+     * <b>
+     * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
+     *
+     * @throws IOException if listing files in the cache directory or deleting files in it fails
+     * @see #getAllPaths(boolean)
+     */
+    public void cleanupCacheDirectory() throws IOException {
+        Set<Path> paths = getAllPaths(true);
+        Set<Path> filesToDelete = Files.list(cacheDirectory)
+                // Ignore directories
+                .filter(path -> !Files.isDirectory(path))
+                // Ignore files in this DependencyManager
+                .filter(path -> !paths.contains(path))
+                .collect(Collectors.toSet());
+
+        for (Path path : filesToDelete) {
+            Files.delete(path);
+        }
     }
 
     @SuppressWarnings("unchecked")
