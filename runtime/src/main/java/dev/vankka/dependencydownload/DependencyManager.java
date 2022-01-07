@@ -8,7 +8,7 @@ import dev.vankka.dependencydownload.relocation.JarRelocatorHelper;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.util.ExceptionalConsumer;
-import dev.vankka.dependencydownload.util.HashUtil;
+import dev.vankka.dependencydownload.common.util.HashUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
