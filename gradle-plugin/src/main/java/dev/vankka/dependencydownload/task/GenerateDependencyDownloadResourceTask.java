@@ -331,7 +331,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
                 logger.warn("This is usually caused by the dependency being resolved from mavenLocal()");
                 logger.warn("and the local repository containing the dependency with the version '" + version + "' (without a timestamp)");
             }
-            dependencies.add(dependencyGroupName + ":" + finalVersion + " " + hash);
+            String publishType = snapshotVersion != null ? "SNAPSHOT" : "RELEASE"; // Add information about publish type
+            dependencies.add(dependencyGroupName + ":" + finalVersion + " " + hash + " " + publishType);
         }
 
         for (ResolvedDependency child : dependency.getChildren()) {
