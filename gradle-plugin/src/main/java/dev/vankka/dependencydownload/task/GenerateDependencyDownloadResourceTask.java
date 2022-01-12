@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask {
 
@@ -308,7 +309,21 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         if (hash != null) {
             String dependencyGroupName = dependency.getModuleGroup() + ":" + dependency.getModuleName();
             String version = dependency.getModuleVersion();
-            String finalVersion = snapshotVersion != null ? version + ":" + snapshotVersion : version;
+
+            AtomicReference<String> classifier = new AtomicReference<>(); // Check if dependencies are classifier, if yes, get classifier
+            dependency.getModuleArtifacts().forEach(art -> {
+                if (art.getClassifier() != null) {
+                    classifier.set(art.getClassifier());
+                }
+            });
+
+            String finalVersion;
+            if (!Objects.equals(classifier.get(), "") && classifier.get() != null && snapshotVersion == null) // If dependencies are classifier, add this in file.
+                finalVersion = version + ":" + classifier.get();
+            else
+                finalVersion = snapshotVersion != null ? version + ":" + snapshotVersion : version;
+
+
             if (finalVersion.endsWith("-SNAPSHOT")) {
                 Logger logger = getLogger();
                 logger.warn("");
