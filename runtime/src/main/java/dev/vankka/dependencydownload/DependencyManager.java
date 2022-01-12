@@ -193,11 +193,12 @@ public class DependencyManager {
             }
 
             String[] parts = line.split(" ");
-            if (parts.length != 2) {
+            if (parts.length != 3) {
                 throw new IllegalArgumentException("Resource format is invalid: invalid dependency: " + line);
             }
             String maven = parts[0];
             String hash = parts[1];
+            String publishType = parts[2];
 
             String[] mavenParts = maven.split(":");
             int partCount = mavenParts.length;
@@ -215,14 +216,25 @@ public class DependencyManager {
                         hashingAlgorithm
                 );
             } else {
-                dependency = new SnapshotDependency(
-                        mavenParts[0],
-                        mavenParts[1],
-                        mavenParts[2],
-                        mavenParts[3],
-                        hash,
-                        hashingAlgorithm
-                );
+                if (publishType.contains("SNAPSHOT")) {
+                    dependency = new SnapshotDependency(
+                            mavenParts[0],
+                            mavenParts[1],
+                            mavenParts[2],
+                            mavenParts[3],
+                            hash,
+                            hashingAlgorithm
+                    );
+                } else {
+                    dependency = new StandardDependency(
+                            mavenParts[0],
+                            mavenParts[1],
+                            mavenParts[2],
+                            mavenParts[3],
+                            hash,
+                            hashingAlgorithm
+                    );
+                }
             }
 
             dependencies.add(dependency);
