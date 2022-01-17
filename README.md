@@ -1,4 +1,4 @@
-# DependencyManager
+# DependencyDownload
 ![Maven Central](https://img.shields.io/maven-central/v/dev.vankka.dependencydownload/runtime?label=release)
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka.dependencydownload/runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)
 ![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/dev.vankka.dependencydownload.plugin?label=gradle%20plugin)
