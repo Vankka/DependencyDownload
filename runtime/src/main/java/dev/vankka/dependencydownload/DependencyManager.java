@@ -7,7 +7,6 @@ import dev.vankka.dependencydownload.dependency.StandardDependency;
 import dev.vankka.dependencydownload.relocation.JarRelocatorHelper;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
-import dev.vankka.dependencydownload.util.ExceptionalConsumer;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -550,5 +549,16 @@ public class DependencyManager {
                           : getPathForDependency(dependency);
 
         classpathAppender.appendFileToClasspath(fileToLoad);
+    }
+
+    /**
+     * Helper class to provide a Consumer that throws {@link Throwable}.
+     *
+     * @param <T> the consumable's type
+     */
+    @FunctionalInterface
+    private interface ExceptionalConsumer<T> {
+
+        void run(T t) throws Throwable;
     }
 }
