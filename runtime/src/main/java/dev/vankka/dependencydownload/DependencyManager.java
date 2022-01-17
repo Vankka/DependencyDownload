@@ -3,7 +3,6 @@ package dev.vankka.dependencydownload;
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.dependency.Dependency;
-import dev.vankka.dependencydownload.relocation.JarRelocatorHelper;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
@@ -11,21 +10,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -226,7 +221,8 @@ public class DependencyManager {
         }
         step.set(2);
 
-        JarRelocatorHelper helper = new JarRelocatorHelper(jarRelocatorLoader != null ? jarRelocatorLoader : getClass().getClassLoader());
+        JarRelocatorHelper helper = new JarRelocatorHelper(
+                jarRelocatorLoader != null ? jarRelocatorLoader : getClass().getClassLoader());
         return forEachDependency(executor, dependency -> relocateDependency(dependency, helper),
                 (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause));
     }
@@ -451,5 +447,43 @@ public class DependencyManager {
     private interface ExceptionalConsumer<T> {
 
         void run(T t) throws Throwable;
+    }
+
+    private static class JarRelocatorHelper {
+
+        private final Constructor<?> relocatorConstructor;
+        private final Method relocatorRunMethod;
+
+        private final Constructor<?> relocationConstructor;
+
+        public JarRelocatorHelper(ClassLoader classLoader) {
+            try {
+                Class<?> relocatorClass = classLoader.loadClass("me.lucko.jarrelocator.JarRelocator");
+                this.relocatorConstructor = relocatorClass.getConstructor(File.class, File.class, Collection.class);
+                this.relocatorRunMethod = relocatorClass.getMethod("run");
+
+                Class<?> relocationClass = classLoader.loadClass("me.lucko.jarrelocator.Relocation");
+                this.relocationConstructor = relocationClass.getConstructor(String.class, String.class, Collection.class, Collection.class);
+            } catch (ClassNotFoundException | NoSuchMethodException e) {
+                throw new RuntimeException("Failed to load jar-relocator from the provided ClassLoader", e);
+            }
+        }
+
+        public void run(Path from, Path to, Set<Relocation> relocations) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+            Set<Object> mappedRelocations = new HashSet<>();
+
+            for (Relocation relocation : relocations) {
+                Object mapped = relocationConstructor.newInstance(
+                        relocation.getPattern(),
+                        relocation.getShadedPattern(),
+                        relocation.getIncludes(),
+                        relocation.getExcludes()
+                );
+                mappedRelocations.add(mapped);
+            }
+
+            Object relocator = relocatorConstructor.newInstance(from.toFile(), to.toFile(), mappedRelocations);
+            relocatorRunMethod.invoke(relocator);
+        }
     }
 }
