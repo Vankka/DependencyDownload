@@ -91,6 +91,9 @@ public class DependencyDownloadResource {
                         if (relocationStep == 2) {
                             include = values;
                         } else {
+                            if (replacement == null) {
+                                throw new IllegalStateException("Replacement may not be null");
+                            }
                             relocations.add(new Relocation(pattern, replacement, include, values));
                             include = null;
                             relocationStep = 0;

@@ -1,6 +1,7 @@
 package dev.vankka.dependencydownload.classloader;
 
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,7 +24,7 @@ public class IsolatedClassLoader extends URLClassLoader implements ClasspathAppe
     }
 
     @Override
-    public void appendFileToClasspath(Path path) throws MalformedURLException {
+    public void appendFileToClasspath(@NotNull Path path) throws MalformedURLException {
         addURL(path.toUri().toURL());
     }
 }

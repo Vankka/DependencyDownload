@@ -1,5 +1,7 @@
 package dev.vankka.dependencydownload.dependency;
 
+import org.jetbrains.annotations.NotNull;
+
 public class SnapshotDependency extends StandardDependency {
 
     private final String snapshotVersion;
@@ -28,7 +30,7 @@ public class SnapshotDependency extends StandardDependency {
     }
 
     @Override
-    public String getFileName() {
+    public @NotNull String getFileName() {
         String classifier = getClassifier();
         return getArtifactId()
                 + '-' + getSnapshotVersion()

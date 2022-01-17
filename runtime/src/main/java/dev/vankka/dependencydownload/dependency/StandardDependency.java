@@ -1,5 +1,7 @@
 package dev.vankka.dependencydownload.dependency;
 
+import org.jetbrains.annotations.NotNull;
+
 public class StandardDependency implements Dependency {
 
     private final String groupId;
@@ -19,17 +21,17 @@ public class StandardDependency implements Dependency {
     }
 
     @Override
-    public String getGroupId() {
+    public @NotNull String getGroupId() {
         return groupId;
     }
 
     @Override
-    public String getArtifactId() {
+    public @NotNull String getArtifactId() {
         return artifactId;
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return version;
     }
 
@@ -44,12 +46,12 @@ public class StandardDependency implements Dependency {
     }
 
     @Override
-    public String getHash() {
+    public @NotNull String getHash() {
         return hash;
     }
 
     @Override
-    public String getHashingAlgorithm() {
+    public @NotNull String getHashingAlgorithm() {
         return hashingAlgorithm;
     }
 

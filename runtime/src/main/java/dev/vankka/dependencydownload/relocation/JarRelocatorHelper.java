@@ -1,5 +1,7 @@
 package dev.vankka.dependencydownload.relocation;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +11,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A helper for working with {@link me.lucko.jarrelocator.JarRelocator} with different classloaders.
+ */
+@ApiStatus.Internal
 public class JarRelocatorHelper {
 
     private final Constructor<?> relocatorConstructor;

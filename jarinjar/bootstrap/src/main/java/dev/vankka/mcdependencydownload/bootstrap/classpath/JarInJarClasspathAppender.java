@@ -2,6 +2,7 @@ package dev.vankka.mcdependencydownload.bootstrap.classpath;
 
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.mcdependencydownload.classloader.JarInJarClassLoader;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
@@ -23,7 +24,7 @@ public class JarInJarClasspathAppender implements ClasspathAppender {
     }
 
     @Override
-    public void appendFileToClasspath(Path path) throws MalformedURLException {
+    public void appendFileToClasspath(@NotNull Path path) throws MalformedURLException {
         classLoader.addURL(path);
     }
 }
