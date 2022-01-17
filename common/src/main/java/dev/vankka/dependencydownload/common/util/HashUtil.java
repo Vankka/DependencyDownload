@@ -1,5 +1,7 @@
 package dev.vankka.dependencydownload.common.util;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * A helper class to get standard hashes from {@link MessageDigest}s and {@link File}s.
  */
+@ApiStatus.Internal
 public final class HashUtil {
 
     private HashUtil() {}
