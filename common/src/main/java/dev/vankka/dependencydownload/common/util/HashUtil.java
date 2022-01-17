@@ -1,4 +1,4 @@
-package dev.vankka.dependencydownload.util;
+package dev.vankka.dependencydownload.common.util;
 
 import java.io.File;
 import java.io.FileInputStream;

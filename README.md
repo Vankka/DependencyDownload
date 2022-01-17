@@ -71,7 +71,7 @@ This would generate two files `runtimeDownloadOnly.txt` and `runtimeDownload.txt
 
 ### Loading dependencies from a plugin generated file
 ```java
-DependecyManager manager = new DependencyManager();
+DependencyManager manager = new DependencyManager();
 manager.loadFromResource(getClass().getResource("runtimeDownloadOnly.txt"));
 ```
 
@@ -117,7 +117,7 @@ processResources.dependsOn generateJarRelocatorResource
 ```
 
 ```java
-DependecyManager manager = new DependencyManager();
+DependencyManager manager = new DependencyManager();
 manager.loadFromResource(getClass().getResource("jarRelocator.txt"));
 
 Executor executor = Executors.newCachedThreadPool(2);

@@ -11,3 +11,9 @@ java {
     withJavadocJar()
     withSourcesJar()
 }
+
+tasks.jar {
+    manifest {
+        attributes("Automatic-Module-Name": "dev.vankka.dependencydownload.runtime")
+    }
+}

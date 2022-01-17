@@ -2,7 +2,7 @@ package dev.vankka.dependencydownload.task;
 
 import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
 import dev.vankka.dependencydownload.relocation.Relocation;
-import dev.vankka.dependencydownload.util.HashUtil;
+import dev.vankka.dependencydownload.common.util.HashUtil;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
