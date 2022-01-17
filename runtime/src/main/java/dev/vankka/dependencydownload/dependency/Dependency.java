@@ -27,6 +27,12 @@ public interface Dependency {
     String getVersion();
 
     /**
+     * The classifier for the dependency artifact, if any.
+     * @return the dependency artifact's classifier or {@code null}.
+     */
+    String getClassifier();
+
+    /**
      * The timestamped snapshot version.
      * @return the timestamped snapshot version or {@code null} if this isn't a snapshot dependency.
      * @see #isSnapshot()
@@ -66,7 +72,12 @@ public interface Dependency {
      * @return the file name for storing the dependency
      */
     default String getStoredFileName() {
-        return getGroupId() + '-' + getArtifactId() + '-' + getVersion() + ".jar";
+        String classifier = getClassifier();
+        return getGroupId()
+                + '-' + getArtifactId()
+                + '-' + getVersion()
+                + (classifier != null ? '-' + classifier : "")
+                + ".jar";
     }
 
     /**

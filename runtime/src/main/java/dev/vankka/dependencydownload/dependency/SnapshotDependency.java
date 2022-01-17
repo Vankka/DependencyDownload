@@ -4,8 +4,16 @@ public class SnapshotDependency extends StandardDependency {
 
     private final String snapshotVersion;
 
-    public SnapshotDependency(String groupId, String artifactId, String version, String snapshotVersion, String hash, String hashingAlgorithm) {
-        super(groupId, artifactId, version, hash, hashingAlgorithm);
+    public SnapshotDependency(
+            String groupId,
+            String artifactId,
+            String version,
+            String classifier,
+            String snapshotVersion,
+            String hash,
+            String hashingAlgorithm
+    ) {
+        super(groupId, artifactId, version, classifier, hash, hashingAlgorithm);
         this.snapshotVersion = snapshotVersion;
     }
 
@@ -21,6 +29,10 @@ public class SnapshotDependency extends StandardDependency {
 
     @Override
     public String getFileName() {
-        return getArtifactId() + '-' + getSnapshotVersion() + ".jar";
+        String classifier = getClassifier();
+        return getArtifactId()
+                + '-' + getSnapshotVersion()
+                + (classifier != null ? '-' + classifier : "")
+                + ".jar";
     }
 }

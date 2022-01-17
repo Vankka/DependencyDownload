@@ -201,25 +201,48 @@ public class DependencyManager {
 
             String[] mavenParts = maven.split(":");
             int partCount = mavenParts.length;
-            if (partCount < 3 || partCount > 4) {
+            if (partCount < 3 || partCount > 5) {
                 throw new IllegalArgumentException("Resource format is invalid: invalid dependency GAV: " + maven + " (" + partCount + ")");
             }
 
+            String group = mavenParts[0];
+            String artifact = mavenParts[1];
+            String version = mavenParts[2];
+            String snapshotTimestamp;
+            String classifier;
+            if (version.endsWith("-SNAPSHOT")) {
+                snapshotTimestamp = mavenParts[3];
+                if (partCount == 5) {
+                    classifier = mavenParts[4];
+                } else {
+                    classifier = null;
+                }
+            } else {
+                snapshotTimestamp = null;
+                if (partCount == 4) {
+                    classifier = mavenParts[3];
+                } else {
+                    classifier = null;
+                }
+            }
+
             Dependency dependency;
-            if (partCount == 3) {
+            if (snapshotTimestamp == null) {
                 dependency = new StandardDependency(
-                        mavenParts[0],
-                        mavenParts[1],
-                        mavenParts[2],
+                        group,
+                        artifact,
+                        version,
+                        classifier,
                         hash,
                         hashingAlgorithm
                 );
             } else {
                 dependency = new SnapshotDependency(
-                        mavenParts[0],
-                        mavenParts[1],
-                        mavenParts[2],
-                        mavenParts[3],
+                        group,
+                        artifact,
+                        version,
+                        classifier,
+                        snapshotTimestamp,
                         hash,
                         hashingAlgorithm
                 );

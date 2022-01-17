@@ -288,9 +288,15 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     private List<String> processDependency(ResolvedDependency dependency, String hashingAlgorithm) throws NoSuchAlgorithmException, IOException {
         String hash = null;
         String snapshotVersion = null;
+        String classifier = null;
         for (ResolvedArtifact moduleArtifact : dependency.getModuleArtifacts()) {
             if (!moduleArtifact.getType().equals("jar")) {
                 continue;
+            }
+
+            String currentClassifier = moduleArtifact.getClassifier();
+            if (currentClassifier != null) {
+                classifier = currentClassifier;
             }
 
             File file = moduleArtifact.getFile();
@@ -316,7 +322,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
                 logger.warn("This is usually caused by the dependency being resolved from mavenLocal()");
                 logger.warn("and the local repository containing the dependency with the version '" + version + "' (without a timestamp)");
             }
-            dependencies.add(dependencyGroupName + ":" + finalVersion + " " + hash);
+            dependencies.add(dependencyGroupName + ":" + finalVersion + (classifier != null ? ":" + classifier : "") + " " + hash);
         }
 
         for (ResolvedDependency child : dependency.getChildren()) {
