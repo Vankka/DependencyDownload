@@ -3,6 +3,7 @@ package dev.vankka.dependencydownload;
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.path.CustomPath;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
@@ -42,6 +43,7 @@ public class DependencyManager {
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
     private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
     private final AtomicInteger step = new AtomicInteger(0);
+    private CustomPath customPath;
 
     /**
      * Creates a {@link DependencyManager}.
@@ -100,6 +102,33 @@ public class DependencyManager {
     @NotNull
     public Set<Relocation> getRelocations() {
         return Collections.unmodifiableSet(relocations);
+    }
+
+    /**
+     * Gets CustomPath class implementation
+     * @return implementation of CustomPath class
+     * @see CustomPath
+     */
+    public CustomPath getCustomPath() {
+        return customPath;
+    }
+
+    /**
+     * Set CustomPath class implementation
+     * @param customPath: The instance of CustomPath class
+     * @see CustomPath
+     */
+    public void setCustomPath(CustomPath customPath) {
+        this.customPath = customPath;
+    }
+
+    /**
+     * Gets if CustomPath class is register
+     * @return true if CustomPath class is register
+     * @see CustomPath
+     */
+    public boolean asCustomPath() {
+        return this.customPath != null;
     }
 
     /**
@@ -268,6 +297,8 @@ public class DependencyManager {
      */
     @NotNull
     public Path getPathForDependency(@NotNull Dependency dependency) {
+        if (asCustomPath())
+            return getCustomPath().getCustomPath(dependency);
         String fileName = dependency.getStoredFileName();
         return cacheDirectory.resolve(fileName);
     }
@@ -369,6 +400,10 @@ public class DependencyManager {
         }
 
         Path dependencyPath = getPathForDependency(dependency);
+
+        if (!Files.exists(dependencyPath.getParent()))
+            Files.createDirectories(dependencyPath.getParent());
+
         if (Files.exists(dependencyPath)) {
             String fileHash = HashUtil.getFileHash(dependencyPath.toFile(), dependency.getHashingAlgorithm());
             if (fileHash.equals(dependency.getHash())) {
