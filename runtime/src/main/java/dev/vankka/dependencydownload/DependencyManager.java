@@ -105,29 +105,30 @@ public class DependencyManager {
     }
 
     /**
-     * Gets CustomPath class implementation
-     * @return implementation of CustomPath class
+     * Gets the custom path provider for this DependencyManager.
+     * @return the instance of CustomPath or {@code null}
      * @see CustomPath
      */
+    @Nullable
     public CustomPath getCustomPath() {
         return customPath;
     }
 
     /**
-     * Set CustomPath class implementation
-     * @param customPath: The instance of CustomPath class
+     * Sets the custom path provider for this DependencyManager.
+     * @param customPath the new path provider
      * @see CustomPath
      */
-    public void setCustomPath(CustomPath customPath) {
+    public void setCustomPath(@Nullable CustomPath customPath) {
         this.customPath = customPath;
     }
 
     /**
-     * Gets if CustomPath class is register
-     * @return true if CustomPath class is register
+     * Gets if a custom path provider is set.
+     * @return {@code true} if a custom path provider is set, otherwise {@code false}
      * @see CustomPath
      */
-    public boolean asCustomPath() {
+    public boolean hasCustomPath() {
         return this.customPath != null;
     }
 
@@ -297,8 +298,9 @@ public class DependencyManager {
      */
     @NotNull
     public Path getPathForDependency(@NotNull Dependency dependency) {
-        if (asCustomPath())
+        if (hasCustomPath()) {
             return getCustomPath().getCustomPath(dependency);
+        }
         String fileName = dependency.getStoredFileName();
         return cacheDirectory.resolve(fileName);
     }
@@ -401,8 +403,9 @@ public class DependencyManager {
 
         Path dependencyPath = getPathForDependency(dependency);
 
-        if (!Files.exists(dependencyPath.getParent()))
+        if (!Files.exists(dependencyPath.getParent())) {
             Files.createDirectories(dependencyPath.getParent());
+        }
 
         if (Files.exists(dependencyPath)) {
             String fileHash = HashUtil.getFileHash(dependencyPath.toFile(), dependency.getHashingAlgorithm());
