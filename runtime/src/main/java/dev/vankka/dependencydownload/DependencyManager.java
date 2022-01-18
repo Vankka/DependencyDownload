@@ -3,7 +3,7 @@ package dev.vankka.dependencydownload;
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.dependency.Dependency;
-import dev.vankka.dependencydownload.path.CustomPath;
+import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
@@ -43,7 +43,7 @@ public class DependencyManager {
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
     private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
     private final AtomicInteger step = new AtomicInteger(0);
-    private CustomPath customPath;
+    private DependencyPathProvider dependencyPathProvider;
 
     /**
      * Creates a {@link DependencyManager}.
@@ -105,31 +105,31 @@ public class DependencyManager {
     }
 
     /**
-     * Gets the custom path provider for this DependencyManager.
-     * @return the instance of CustomPath or {@code null}
-     * @see CustomPath
+     * Gets the dependency path provider for this DependencyManager.
+     * @return the instance of {@link DependencyPathProvider} or {@code null}
+     * @see DependencyPathProvider
      */
     @Nullable
-    public CustomPath getCustomPath() {
-        return customPath;
+    public DependencyPathProvider getDependencyPathProvider() {
+        return dependencyPathProvider;
     }
 
     /**
-     * Sets the custom path provider for this DependencyManager.
-     * @param customPath the new path provider
-     * @see CustomPath
+     * Sets the dependency path provider for this DependencyManager.
+     * @param dependencyPathProvider the new dependency path provider
+     * @see DependencyPathProvider
      */
-    public void setCustomPath(@Nullable CustomPath customPath) {
-        this.customPath = customPath;
+    public void setDependencyPathProvider(@Nullable DependencyPathProvider dependencyPathProvider) {
+        this.dependencyPathProvider = dependencyPathProvider;
     }
 
     /**
-     * Gets if a custom path provider is set.
-     * @return {@code true} if a custom path provider is set, otherwise {@code false}
-     * @see CustomPath
+     * Gets if a dependency path provider is set.
+     * @return {@code true} if a dependency path provider is set, otherwise {@code false}
+     * @see DependencyPathProvider
      */
-    public boolean hasCustomPath() {
-        return this.customPath != null;
+    public boolean hasDependencyPathProvider() {
+        return this.dependencyPathProvider != null;
     }
 
     /**
@@ -298,8 +298,8 @@ public class DependencyManager {
      */
     @NotNull
     public Path getPathForDependency(@NotNull Dependency dependency) {
-        if (hasCustomPath()) {
-            return getCustomPath().getCustomPath(dependency);
+        if (hasDependencyPathProvider()) {
+            return getDependencyPathProvider().getDependencyPathProvider(dependency);
         }
         String fileName = dependency.getStoredFileName();
         return cacheDirectory.resolve(fileName);

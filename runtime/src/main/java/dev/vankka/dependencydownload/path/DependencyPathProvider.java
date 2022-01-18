@@ -9,7 +9,7 @@ import java.nio.file.Path;
  * A {@link Path} provider for {@link Dependency Dependencies}.
  */
 @FunctionalInterface
-public interface CustomPath {
+public interface DependencyPathProvider {
 
     /**
      * Gets the path that should be used for the provided {@link Dependency}.
@@ -17,6 +17,6 @@ public interface CustomPath {
      * @return The absolute or relative path for the provided dependency
      */
     @NotNull
-    Path getCustomPath(@NotNull Dependency dependency);
+    Path getDependencyPathProvider(@NotNull Dependency dependency);
 
 }
