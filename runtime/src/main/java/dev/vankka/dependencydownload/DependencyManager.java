@@ -274,6 +274,7 @@ public class DependencyManager {
      * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded.
      *
      * @param dependency the dependency.
+     * @param relocated: true if it is a relocated dependency
      * @return the path for the dependency
      */
     @NotNull
