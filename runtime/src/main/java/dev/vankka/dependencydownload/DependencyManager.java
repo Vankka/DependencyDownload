@@ -109,7 +109,7 @@ public class DependencyManager {
      * @return the instance of {@link DependencyPathProvider} or {@code null}
      * @see DependencyPathProvider
      */
-    @Nullable
+    @NotNull
     public DependencyPathProvider getDependencyPathProvider() {
         return dependencyPathProvider;
     }

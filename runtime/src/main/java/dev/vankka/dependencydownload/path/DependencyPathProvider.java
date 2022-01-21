@@ -9,7 +9,6 @@ import java.nio.file.Path;
  * A {@link Path} provider for {@link Dependency Dependencies}.
  */
 @FunctionalInterface
-@NotNull
 public interface DependencyPathProvider {
 
     /**
