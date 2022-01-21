@@ -3,7 +3,9 @@ package dev.vankka.dependencydownload;
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.path.CleanupPathProvider;
 import dev.vankka.dependencydownload.path.DependencyPathProvider;
+import dev.vankka.dependencydownload.path.DirectoryDependencyPathProvider;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.repository.Repository;
 import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
@@ -49,7 +51,7 @@ public class DependencyManager {
      * @param cacheDirectory the directory used for downloaded and relocated dependencies.
      */
     public DependencyManager(@NotNull Path cacheDirectory) {
-        this.dependencyPathProvider = (dependency, relocated) -> cacheDirectory.resolve(relocated ? RELOCATED_FILE_PREFIX : "" + dependency.getStoredFileName());
+        this.dependencyPathProvider = new DirectoryDependencyPathProvider(cacheDirectory);
     }
 
     /**
@@ -302,16 +304,21 @@ public class DependencyManager {
     }
 
     // TODO: remake cleanupCacheDirectory function
-    /*/**
-     * Removes files that are not known dependencies of this {@link DependencyManager} from the {@link #getCacheDirectory()}.
+    /**
+     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPathProvider()} implementation.
      * <b>
      * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
      * </b>
      *
      * @throws IOException if listing files in the cache directory or deleting files in it fails
+     * @throws IllegalStateException if the dependencyPathProvider don't instanceof CleanupPathProvider
      * @see #getAllPaths(boolean)
      */
-    /*public void cleanupCacheDirectory() throws IOException {
+    public void cleanupCacheDirectory() throws IOException, IllegalStateException {
+        if (!(dependencyPathProvider instanceof CleanupPathProvider)) {
+            throw new IllegalStateException("Cache directory cleanup is only available when dependencyPathProvider instanceof CleanupPathProvider interface");
+        }
+        Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPathProvider();
         Set<Path> paths = getAllPaths(true);
         Set<Path> filesToDelete = Files.list(cacheDirectory)
                 // Ignore directories
@@ -323,7 +330,7 @@ public class DependencyManager {
         for (Path path : filesToDelete) {
             Files.delete(path);
         }
-    }*/
+    }
 
     @SuppressWarnings("unchecked")
     private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable,
