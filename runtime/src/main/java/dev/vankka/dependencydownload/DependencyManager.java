@@ -303,7 +303,6 @@ public class DependencyManager {
         return paths;
     }
 
-    // TODO: remake cleanupCacheDirectory function
     /**
      * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPathProvider()} implementation.
      * <b>
