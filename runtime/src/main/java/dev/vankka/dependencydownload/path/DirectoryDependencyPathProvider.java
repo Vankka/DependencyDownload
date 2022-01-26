@@ -22,12 +22,12 @@ public class DirectoryDependencyPathProvider implements CleanupPathProvider {
     }
 
     @Override
-    public @NotNull Path getCleanupPathProvider() {
+    public @NotNull Path getCleanupPath() {
         return cacheDirectory;
     }
 
     @Override
-    public @NotNull Path getDependencyPathProvider(@NotNull Dependency dependency, boolean relocated) {
+    public @NotNull Path getDependencyPath(@NotNull Dependency dependency, boolean relocated) {
         return cacheDirectory.resolve((relocated ? RELOCATED_FILE_PREFIX : "") + dependency.getStoredFileName());
     }
 }

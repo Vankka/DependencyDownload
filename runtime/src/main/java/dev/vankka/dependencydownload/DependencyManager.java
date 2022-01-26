@@ -276,12 +276,12 @@ public class DependencyManager {
      * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded.
      *
      * @param dependency the dependency.
-     * @param relocated: true if it is a relocated dependency
+     * @param relocated if the path should be for the relocated or unrelocated file of the Dependency
      * @return the path for the dependency
      */
     @NotNull
     public Path getPathForDependency(@NotNull Dependency dependency, boolean relocated) {
-        return getDependencyPathProvider().getDependencyPathProvider(dependency, relocated);
+        return getDependencyPathProvider().getDependencyPath(dependency, relocated);
     }
 
     /**
@@ -304,20 +304,21 @@ public class DependencyManager {
     }
 
     /**
-     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPathProvider()} implementation.
+     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPath()} ()} implementation.
      * <b>
      * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
      * </b>
      *
      * @throws IOException if listing files in the cache directory or deleting files in it fails
-     * @throws IllegalStateException if the dependencyPathProvider don't instanceof CleanupPathProvider
+     * @throws IllegalStateException if this DependencyManager's dependencyPathProvider isn't an instance of {@link CleanupPathProvider}
      * @see #getAllPaths(boolean)
+     * @see CleanupPathProvider
      */
     public void cleanupCacheDirectory() throws IOException, IllegalStateException {
         if (!(dependencyPathProvider instanceof CleanupPathProvider)) {
             throw new IllegalStateException("Cache directory cleanup is only available when dependencyPathProvider instanceof CleanupPathProvider interface");
         }
-        Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPathProvider();
+        Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPath();
         Set<Path> paths = getAllPaths(true);
         Set<Path> filesToDelete = Files.list(cacheDirectory)
                 // Ignore directories

@@ -14,10 +14,10 @@ public interface DependencyPathProvider {
     /**
      * Gets the path that should be used for the provided {@link Dependency}.
      * @param dependency the dependency
-     * @param relocated: true if it is a relocated dependency
+     * @param relocated if the path should be for the relocated or unrelocated file
      * @return The absolute or relative path for the provided dependency
      */
     @NotNull
-    Path getDependencyPathProvider(@NotNull Dependency dependency, boolean relocated);
+    Path getDependencyPath(@NotNull Dependency dependency, boolean relocated);
 
 }
