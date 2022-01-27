@@ -304,7 +304,7 @@ public class DependencyManager {
     }
 
     /**
-     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPath()} ()} implementation.
+     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPath()} implementation.
      * <b>
      * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
      * </b>
@@ -316,7 +316,7 @@ public class DependencyManager {
      */
     public void cleanupCacheDirectory() throws IOException, IllegalStateException {
         if (!(dependencyPathProvider instanceof CleanupPathProvider)) {
-            throw new IllegalStateException("Cache directory cleanup is only available when dependencyPathProvider instanceof CleanupPathProvider interface");
+            throw new IllegalStateException("Cache directory cleanup is only available when dependencyPathProvider is a instance of CleanupPathProvider");
         }
         Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPath();
         Set<Path> paths = getAllPaths(true);
@@ -333,8 +333,11 @@ public class DependencyManager {
     }
 
     @SuppressWarnings("unchecked")
-    private CompletableFuture<Void>[] forEachDependency(Executor executor, ExceptionalConsumer<Dependency> runnable,
-                                                        BiFunction<Dependency, Throwable, Throwable> dependencyException) {
+    private CompletableFuture<Void>[] forEachDependency(
+            Executor executor,
+            ExceptionalConsumer<Dependency> runnable,
+            BiFunction<Dependency, Throwable, Throwable> dependencyException
+    ) {
         int size = dependencies.size();
         CompletableFuture<Void>[] futures = new CompletableFuture[size];
 
@@ -368,8 +371,8 @@ public class DependencyManager {
         return futures;
     }
 
-    private void downloadDependency(Dependency dependency, List<Repository> repositories) throws IOException, NoSuchAlgorithmException {
-
+    private void downloadDependency(Dependency dependency, List<Repository> repositories)
+            throws IOException, NoSuchAlgorithmException {
         Path dependencyPath = getPathForDependency(dependency, false);
 
         if (!Files.exists(dependencyPath.getParent())) {
@@ -409,7 +412,12 @@ public class DependencyManager {
         throw failure;
     }
 
-    private void downloadFromRepository(Dependency dependency, Repository repository, Path dependencyPath, MessageDigest digest) throws Throwable {
+    private void downloadFromRepository(
+            Dependency dependency,
+            Repository repository,
+            Path dependencyPath,
+            MessageDigest digest
+    ) throws Throwable {
         HttpsURLConnection connection = repository.openConnection(dependency);
 
         byte[] buffer = new byte[4096];
@@ -437,7 +445,11 @@ public class DependencyManager {
         }
     }
 
-    private void loadDependency(Dependency dependency, ClasspathAppender classpathAppender, boolean relocated) throws MalformedURLException {
+    private void loadDependency(
+            Dependency dependency,
+            ClasspathAppender classpathAppender,
+            boolean relocated
+    ) throws MalformedURLException {
         Path fileToLoad = relocated
                           ? getPathForDependency(dependency, true)
                           : getPathForDependency(dependency, false);
