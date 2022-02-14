@@ -3,15 +3,6 @@ dependencies {
     implementation 'me.lucko:jar-relocator:1.5'
 }
 
-jar {
-    archivesBaseName = rootProject.name
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
 tasks.jar {
     manifest {
         attributes("Automatic-Module-Name": "dev.vankka.dependencydownload.runtime")

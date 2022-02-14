@@ -11,7 +11,7 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
 
-    group = 'dev.vankka.dependencydownload'
+    group = 'dev.vankka'
     version = rootProject.version
 
     repositories {
@@ -54,8 +54,9 @@ subprojects {
                 maven(MavenPublication) {
                     from components.java
 
+                    artifactId = 'dependencydownload-' + project.name
                     pom {
-                        name = project.name
+                        name = 'dependencydownload-' + project.name
                         packaging = 'jar'
                         description = 'A library to download dependencies during runtime'
                         url = 'https://github.com/Vankka/DependencyDownload'
