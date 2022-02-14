@@ -55,6 +55,7 @@ task publishProject {
             maven(MavenPublication) {
                 from components.java
 
+                artifactId = 'dependencydownload-gradle-plugin'
                 pom {
                     name = project.name
                     packaging = 'jar'
