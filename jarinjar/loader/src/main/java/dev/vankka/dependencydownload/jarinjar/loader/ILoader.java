@@ -1,7 +1,7 @@
-package dev.vankka.mcdependencydownload.loader;
+package dev.vankka.dependencydownload.jarinjar.loader;
 
-import dev.vankka.mcdependencydownload.classloader.JarInJarClassLoader;
-import dev.vankka.mcdependencydownload.loader.exception.LoadingException;
+import dev.vankka.dependencydownload.jarinjar.classloader.JarInJarClassLoader;
+import dev.vankka.dependencydownload.jarinjar.loader.exception.LoadingException;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +52,7 @@ public interface ILoader {
     /**
      * Creates the class loader for this {@link ILoader}.
      * @return the new classloader
+     * @throws IOException if creating a file in the temporary file directory fails
      */
     @NotNull
     default JarInJarClassLoader createClassLoader() throws IOException {

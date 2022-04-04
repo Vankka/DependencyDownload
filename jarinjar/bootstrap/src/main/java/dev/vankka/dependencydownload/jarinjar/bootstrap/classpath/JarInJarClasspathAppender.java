@@ -1,7 +1,7 @@
-package dev.vankka.mcdependencydownload.bootstrap.classpath;
+package dev.vankka.dependencydownload.jarinjar.bootstrap.classpath;
 
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
-import dev.vankka.mcdependencydownload.classloader.JarInJarClassLoader;
+import dev.vankka.dependencydownload.jarinjar.classloader.JarInJarClassLoader;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;

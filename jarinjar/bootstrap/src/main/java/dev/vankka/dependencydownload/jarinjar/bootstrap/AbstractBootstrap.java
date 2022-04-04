@@ -1,6 +1,6 @@
-package dev.vankka.mcdependencydownload.bootstrap;
+package dev.vankka.dependencydownload.jarinjar.bootstrap;
 
-import dev.vankka.mcdependencydownload.classloader.JarInJarClassLoader;
+import dev.vankka.dependencydownload.jarinjar.classloader.JarInJarClassLoader;
 
 /**
  * A bootstrap that is loaded in by a {@code ILoader} from the loader module.

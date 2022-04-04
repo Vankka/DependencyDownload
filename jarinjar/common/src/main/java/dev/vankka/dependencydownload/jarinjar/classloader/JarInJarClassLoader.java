@@ -1,4 +1,4 @@
-package dev.vankka.mcdependencydownload.classloader;
+package dev.vankka.dependencydownload.jarinjar.classloader;
 
 import java.io.IOException;
 import java.io.InputStream;

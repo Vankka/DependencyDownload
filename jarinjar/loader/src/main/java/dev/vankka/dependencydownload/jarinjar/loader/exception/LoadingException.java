@@ -1,4 +1,4 @@
-package dev.vankka.mcdependencydownload.loader.exception;
+package dev.vankka.dependencydownload.jarinjar.loader.exception;
 
 public class LoadingException extends RuntimeException {
 
