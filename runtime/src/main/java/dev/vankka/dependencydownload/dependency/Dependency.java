@@ -75,7 +75,8 @@ public interface Dependency {
      */
     @NotNull
     default String getFileName() {
-        return getArtifactId() + '-' + getVersion() + ".jar";
+        String classifier = getClassifier();
+        return getArtifactId() + '-' + getVersion() + (classifier != null ? '-' + classifier : "") + ".jar";
     }
 
     /**
