@@ -6,8 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 
 /**
- * An interface extend of {@link DependencyPathProvider}
- * This interface must be implemented to support {@link DependencyManager#cleanupCacheDirectory()}
+ * An interface extending {@link DependencyPathProvider} to provide a cleanup path for the {@link DependencyManager}.
+ * {@link DependencyManager#cleanupCacheDirectory()} requires the use of this interface in {@link DependencyManager#DependencyManager(DependencyPathProvider)}  DependencyManager}.
  */
 public interface CleanupPathProvider extends DependencyPathProvider {
 

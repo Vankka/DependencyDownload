@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 
 /**
- * Default dependency path provider, automatically use when call of constructor {@link dev.vankka.dependencydownload.DependencyManager#DependencyManager(Path)}
+ * Default dependency path provider, automatically used when using the {@link dev.vankka.dependencydownload.DependencyManager#DependencyManager(Path)} constructor.
  */
 public class DirectoryDependencyPathProvider implements CleanupPathProvider {
 

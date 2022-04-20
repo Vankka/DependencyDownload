@@ -16,7 +16,7 @@ public interface Repository {
     String getHost();
 
     /**
-     * Creates a url for the given {@link Dependency} with the {@link #getHost()}.
+     * Creates an url for the given {@link Dependency} with the {@link #getHost()}.
      *
      * @param dependency the dependency to generate the url for
      * @return the url
@@ -27,7 +27,7 @@ public interface Repository {
     }
 
     /**
-     * Opens a connection from a url generated with {@link #createURL(Dependency)}.
+     * Opens a connection from an url generated with {@link #createURL(Dependency)}.
      *
      * @param dependency the dependency used to generate the url
      * @return the opened {@link HttpsURLConnection}
