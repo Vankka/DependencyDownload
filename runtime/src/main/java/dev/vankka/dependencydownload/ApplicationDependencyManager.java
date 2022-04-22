@@ -68,7 +68,7 @@ public class ApplicationDependencyManager {
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, located by the provided {@link URL}.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -85,7 +85,7 @@ public class ApplicationDependencyManager {
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, provided as the {@link String} content of the resource.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -101,7 +101,7 @@ public class ApplicationDependencyManager {
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, provided as a list of lines from the resource.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -116,7 +116,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the dependencies and relocations from the {@link DependencyDownloadResource} provided as an argument.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -129,7 +129,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the provided dependencies and relocations.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -145,7 +145,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the provided dependencies.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -164,7 +164,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the dependencies and relocations from the provided {@link DependencyManager}, the {@link DependencyPathProvider} will be preserved.
-     * <br/>
+     * 
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
