@@ -45,7 +45,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     @Input
     abstract Property<String> getHashingAlgorithm();
 
-    private List<Relocation> relocations = new ArrayList<>();
+    private final List<Relocation> relocations = new ArrayList<>();
 
     @Inject
     public GenerateDependencyDownloadResourceTask(ObjectFactory factory) {
