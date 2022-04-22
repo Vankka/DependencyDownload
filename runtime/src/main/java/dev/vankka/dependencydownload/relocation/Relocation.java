@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -41,5 +42,21 @@ public class Relocation {
     @NotNull
     public Set<String> getExcludes() {
         return excludes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Relocation that = (Relocation) o;
+        return Objects.equals(pattern, that.pattern)
+                && Objects.equals(shadedPattern, that.shadedPattern)
+                && Objects.equals(includes, that.includes)
+                && Objects.equals(excludes, that.excludes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pattern, shadedPattern, includes, excludes);
     }
 }

@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused") // API
 public class DependencyManager {
 
-    @NotNull private final DependencyPathProvider dependencyPathProvider;
+    private final DependencyPathProvider dependencyPathProvider;
 
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
     private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
@@ -50,7 +50,7 @@ public class DependencyManager {
      * @see DirectoryDependencyPathProvider
      */
     public DependencyManager(@NotNull Path cacheDirectory) {
-        this.dependencyPathProvider = new DirectoryDependencyPathProvider(cacheDirectory);
+        this(new DirectoryDependencyPathProvider(cacheDirectory));
     }
 
     /**
@@ -63,14 +63,25 @@ public class DependencyManager {
 
     /**
      * Adds a dependency to this {@link DependencyManager}.
-     * @param dependency the dependency
+     * @param dependency the dependency to add
      * @throws IllegalStateException if this method is executed after downloading
+     * @see #addDependencies(Collection)
      */
     public void addDependency(@NotNull Dependency dependency) {
+        addDependencies(Collections.singleton(dependency));
+    }
+
+    /**
+     * Adds dependencies to this {@link DependencyManager}.
+     * @param dependencies the dependencies to add
+     * @throws IllegalStateException if this method is executed after downloading
+     * @see #addDependency(Dependency)
+     */
+    public void addDependencies(@NotNull Collection<Dependency> dependencies) {
         if (step.get() > 0) {
             throw new IllegalStateException("Cannot add dependencies after downloading");
         }
-        this.dependencies.add(dependency);
+        this.dependencies.addAll(dependencies);
     }
 
     /**
@@ -84,14 +95,25 @@ public class DependencyManager {
 
     /**
      * Adds a relocation to this {@link DependencyManager}.
-     * @param relocation the relocation
+     * @param relocation the relocation to add
      * @throws IllegalStateException if this method is executed after relocating
+     * @see #addRelocations(Collection)
      */
     public void addRelocation(@NotNull Relocation relocation) {
+        addRelocations(Collections.singleton(relocation));
+    }
+
+    /**
+     * Adds relocations to this {@link DependencyManager}.
+     * @param relocations the relocations to add
+     * @throws IllegalStateException if this method is executed after relocating
+     * @see #addRelocation(Relocation)
+     */
+    public void addRelocations(@NotNull Collection<Relocation> relocations) {
         if (step.get() > 2) {
             throw new IllegalStateException("Cannot add relocations after relocating");
         }
-        this.relocations.add(relocation);
+        this.relocations.addAll(relocations);
     }
 
     /**
@@ -121,8 +143,7 @@ public class DependencyManager {
      */
     public void loadFromResource(@NotNull URL resourceURL) throws IOException {
         DependencyDownloadResource resource = new DependencyDownloadResource(resourceURL);
-        dependencies.addAll(resource.getDependencies());
-        relocations.addAll(resource.getRelocations());
+        loadFromResource(resource);
     }
 
     /**
@@ -132,8 +153,7 @@ public class DependencyManager {
      */
     public void loadFromResource(@NotNull String fileContents) {
         DependencyDownloadResource resource = new DependencyDownloadResource(fileContents);
-        dependencies.addAll(resource.getDependencies());
-        relocations.addAll(resource.getRelocations());
+        loadFromResource(resource);
     }
 
     /**
@@ -143,6 +163,15 @@ public class DependencyManager {
      */
     public void loadFromResource(@NotNull List<String> fileLines) {
         DependencyDownloadResource resource = new DependencyDownloadResource(fileLines);
+        loadFromResource(resource);
+    }
+
+    /**
+     * Loads dependencies and relocations from the resource provided.
+     *
+     * @param resource the resource
+     */
+    public void loadFromResource(@NotNull DependencyDownloadResource resource) {
         dependencies.addAll(resource.getDependencies());
         relocations.addAll(resource.getRelocations());
     }

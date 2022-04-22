@@ -2,6 +2,8 @@ package dev.vankka.dependencydownload.dependency;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class SnapshotDependency extends StandardDependency {
 
     private final String snapshotVersion;
@@ -36,5 +38,19 @@ public class SnapshotDependency extends StandardDependency {
                 + '-' + getSnapshotVersion()
                 + (classifier != null ? '-' + classifier : "")
                 + ".jar";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        SnapshotDependency that = (SnapshotDependency) o;
+        return Objects.equals(snapshotVersion, that.snapshotVersion);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), snapshotVersion);
     }
 }
