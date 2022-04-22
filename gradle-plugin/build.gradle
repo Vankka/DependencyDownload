@@ -25,6 +25,7 @@ gradlePlugin {
     plugins {
         runtimeDependencyDownload {
             id = 'dev.vankka.dependencydownload.plugin'
+            name = 'dependencydownload-gradle-plugin'
             displayName = 'DependencyDownload Plugin'
             description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
             implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
