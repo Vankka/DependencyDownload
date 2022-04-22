@@ -31,6 +31,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The main class responsible for downloading, optionally relocating and loading in dependencies.
@@ -359,12 +360,15 @@ public class DependencyManager {
         }
         Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPath();
         Set<Path> paths = getAllPaths(true);
-        Set<Path> filesToDelete = Files.list(cacheDirectory)
-                // Ignore directories
-                .filter(path -> !Files.isDirectory(path))
-                // Ignore files in this DependencyManager
-                .filter(path -> !paths.contains(path))
-                .collect(Collectors.toSet());
+        Set<Path> filesToDelete;
+        try (Stream<Path> stream = Files.list(cacheDirectory)) {
+            filesToDelete = stream
+                    // Ignore directories
+                    .filter(path -> !Files.isDirectory(path))
+                    // Ignore files in this DependencyManager
+                    .filter(path -> !paths.contains(path))
+                    .collect(Collectors.toSet());
+        }
 
         for (Path path : filesToDelete) {
             Files.delete(path);
@@ -461,7 +465,7 @@ public class DependencyManager {
 
         byte[] buffer = new byte[4096];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {
-            try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(dependencyPath.toFile()))) {
+            try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(dependencyPath))) {
                 int total;
                 while ((total = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, total);
