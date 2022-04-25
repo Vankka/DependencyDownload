@@ -184,7 +184,7 @@ public class ApplicationDependencyManager {
 
     private List<Dependency> dependencies(Collection<Dependency> old) {
         List<Dependency> newDependencies = new ArrayList<>(old.size());
-        for (Dependency dependency : dependencies) {
+        for (Dependency dependency : old) {
             String group = dependency.getGroupId();
             String artifact = dependency.getArtifactId();
 
