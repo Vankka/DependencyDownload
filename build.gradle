@@ -29,7 +29,7 @@ subprojects {
     }
 
     license {
-        header = rootProject.file('LICENSE_HEADER')
+        header = rootProject.file('buildscript/LICENSE_HEADER')
         properties {
             String inception = '2021'
             String currentYear = Calendar.getInstance().get(Calendar.YEAR)
