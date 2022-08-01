@@ -31,19 +31,19 @@ import java.util.*;
 public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask {
 
     @Input
-    abstract Property<Configuration> getConfiguration();
+    public abstract Property<Configuration> getConfiguration();
 
     @OutputDirectory
-    abstract RegularFileProperty getFileLocation();
+    public abstract RegularFileProperty getFileLocation();
 
     @Input
-    abstract Property<String> getFile();
+    public abstract Property<String> getFile();
 
     @Input
-    abstract Property<Boolean> getIncludeShadowJarRelocations();
+    public abstract Property<Boolean> getIncludeShadowJarRelocations();
 
     @Input
-    abstract Property<String> getHashingAlgorithm();
+    public abstract Property<String> getHashingAlgorithm();
 
     private final List<Relocation> relocations = new ArrayList<>();
 
