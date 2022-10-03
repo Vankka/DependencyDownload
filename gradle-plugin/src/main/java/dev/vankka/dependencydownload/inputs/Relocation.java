@@ -1,4 +1,4 @@
-package dev.vankka.dependencydownload.relocation;
+package dev.vankka.dependencydownload.inputs;
 
 import org.gradle.api.tasks.Input;
 
