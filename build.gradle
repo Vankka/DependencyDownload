@@ -43,7 +43,7 @@ subprojects {
         // Don't even bother with signing/publishing if neither of these are set
         return
     }
-    if (project.name == 'gradle-plugin') {
+    if (project.name == 'gradle-plugin' || project.name == 'jarinjar' /* only the subprojects of this project are nedded */) {
         // Gradle plugin has it's own configuration
         return
     }
