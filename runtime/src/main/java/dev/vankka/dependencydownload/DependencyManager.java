@@ -192,10 +192,11 @@ public class DependencyManager {
 
     /**
      * Download all the dependencies in this {@link DependencyManager}.
+     * If one of the downloads fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
      * @param executor the executor that will run the downloads, or {@code null} to run it on the current thread
-     * @param repositories an ordered list of repositories that will be tried one-by-one
-     * @return an array containing a {@link CompletableFuture} for each dependency
+     * @param repositories an ordered list of repositories that will be tried one-by-one, in order
+     * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for download once
      */
     public CompletableFuture<Void>[] download(@Nullable Executor executor, @NotNull List<Repository> repositories) {
@@ -242,9 +243,10 @@ public class DependencyManager {
     /**
      * Relocates all the dependencies with the relocations in this {@link DependencyManager}. This step is not required.
      * Uses the {@link ClassLoader} that loaded this class to acquire {@code jar-relocator}.
+     * If one of the relocation fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
      * @param executor the executor that will run the relocations
-     * @return an array containing a {@link CompletableFuture} for each dependency
+     * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for relocation once
      * @see #relocateAll(Executor, ClassLoader)
      * @see #relocateAll(Executor)
@@ -256,10 +258,11 @@ public class DependencyManager {
 
     /**
      * Relocates all the dependencies with the relocations in this {@link DependencyManager}. This step is not required.
+     * If one of the relocation fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
      * @param executor the executor that will run the relocations, or {@code null} to run it on the current thread
      * @param jarRelocatorLoader the {@link ClassLoader} to use to load {@code jar-relocator}
-     * @return an array containing a {@link CompletableFuture} for each dependency
+     * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for relocation once
      * @see #relocateAll(Executor, ClassLoader)
      * @see #relocateAll(Executor)
@@ -295,10 +298,11 @@ public class DependencyManager {
 
     /**
      * Loads all the (potentially relocated) dependencies with provided {@link ClasspathAppender}.
+     * If one of the loads fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
      * @param executor the executor that will load the dependencies, or {@code null} to run it on the current thread
      * @param classpathAppender the classpath appender
-     * @return an array containing a {@link CompletableFuture} for each dependency
+     * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for load once
      */
     public CompletableFuture<Void>[] load(@Nullable Executor executor, @NotNull ClasspathAppender classpathAppender) {
