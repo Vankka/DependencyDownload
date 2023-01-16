@@ -1,10 +1,10 @@
 package dev.vankka.dependencydownload.task;
 
-import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
-import dev.vankka.dependencydownload.inputs.ResourceSplittingStrategy;
-import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.Dependency;
+import dev.vankka.dependencydownload.DependencyDownloadGradlePlugin;
+import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.inputs.Relocation;
+import dev.vankka.dependencydownload.inputs.ResourceSplittingStrategy;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
@@ -162,6 +162,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             throw new IllegalArgumentException("configuration must be provided");
         }
 
+        Set<Dependency> processedDependencies = new HashSet<>();
+
         List<Dependency> dependencies = single ? new ArrayList<>() : null;
         for (Configuration config : getConfigurations(configuration)) {
             for (ResolvedDependency resolvedDependency : config.getResolvedConfiguration().getFirstLevelModuleDependencies()) {
@@ -169,6 +171,10 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
                     dependencies = new ArrayList<>();
                 }
                 for (Dependency dependency : processDependency(resolvedDependency, hashingAlgorithm)) {
+                    if (!processedDependencies.add(dependency)) {
+                        // Only add dependencies once
+                        continue;
+                    }
                     if (!all) {
                         dependencies.add(dependency);
                         continue;
@@ -219,12 +225,6 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             Configuration configuration,
             List<Dependency> dependencies
     ) throws IOException {
-        if (dependencies.isEmpty()) {
-            // Don't write empty files
-            getLogger().warn("Attempted to create dependency file with no dependencies");
-            return;
-        }
-
         StringJoiner result = new StringJoiner("\n");
         result.add("===ALGORITHM " + hashingAlgorithm);
 

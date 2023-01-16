@@ -1,5 +1,7 @@
 package dev.vankka.dependencydownload;
 
+import java.util.Objects;
+
 public class Dependency {
 
     private final String group;
@@ -39,5 +41,19 @@ public class Dependency {
     @Override
     public String toString() {
         return group + ":" + module + ":" + version + (classifier != null ? ":" + classifier : "") + " " + hash;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Dependency that = (Dependency) o;
+        return group.equals(that.group) && module.equals(that.module) && version.equals(
+                that.version) && Objects.equals(classifier, that.classifier);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, module, version, classifier);
     }
 }
