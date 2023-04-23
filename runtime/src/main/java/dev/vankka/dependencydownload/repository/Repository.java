@@ -36,4 +36,12 @@ public interface Repository {
     default HttpsURLConnection openConnection(Dependency dependency) throws IOException {
         return (HttpsURLConnection) createURL(dependency).openConnection();
     }
+
+    /**
+     * Gets the default buffer size (in bytes) for downloading files from this repository, defaults to {@code 8192}.
+     * @return the buffer size
+     */
+    default int getBufferSize() {
+        return 8192;
+    }
 }

@@ -467,7 +467,7 @@ public class DependencyManager {
     ) throws Throwable {
         HttpsURLConnection connection = repository.openConnection(dependency);
 
-        byte[] buffer = new byte[4096];
+        byte[] buffer = new byte[repository.getBufferSize()];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {
             try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(dependencyPath))) {
                 int total;
