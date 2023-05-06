@@ -4,6 +4,7 @@ import dev.vankka.dependencydownload.dependency.Dependency;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -36,15 +37,16 @@ public interface Repository {
      * @return the opened {@link HttpsURLConnection}
      * @throws IOException if opening connection fails
      */
-    default HttpsURLConnection openConnection(Dependency dependency) throws IOException {
+    default URLConnection openConnection(Dependency dependency) throws IOException {
         URLConnection connection = createURL(dependency).openConnection();
-        if (!(connection instanceof HttpsURLConnection)) {
-            throw new RuntimeException("HTTP is not supported.");
-        }
 
-        HttpsURLConnection httpsConnection = (HttpsURLConnection) connection;
-        httpsConnection.setRequestProperty("User-Agent", "DependencyDownload/@VERSION@");
-        return httpsConnection;
+        if (connection instanceof HttpURLConnection) {
+            if (!(connection instanceof HttpsURLConnection)) {
+                throw new RuntimeException("HTTP is not supported.");
+            }
+            connection.setRequestProperty("User-Agent", "DependencyDownload/@VERSION@");
+        }
+        return connection;
     }
 
     /**

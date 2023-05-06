@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -474,7 +475,7 @@ public class DependencyManager {
             Path dependencyPath,
             MessageDigest digest
     ) throws Throwable {
-        HttpsURLConnection connection = repository.openConnection(dependency);
+        URLConnection connection = repository.openConnection(dependency);
 
         byte[] buffer = new byte[repository.getBufferSize()];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {
