@@ -6,6 +6,9 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.Collections;
+import java.util.Map;
 
 public interface Repository {
 
@@ -34,7 +37,14 @@ public interface Repository {
      * @throws IOException if opening connection fails
      */
     default HttpsURLConnection openConnection(Dependency dependency) throws IOException {
-        return (HttpsURLConnection) createURL(dependency).openConnection();
+        URLConnection connection = createURL(dependency).openConnection();
+        if (!(connection instanceof HttpsURLConnection)) {
+            throw new RuntimeException("HTTP is not supported.");
+        }
+
+        HttpsURLConnection httpsConnection = (HttpsURLConnection) connection;
+        httpsConnection.setRequestProperty("User-Agent", "DependencyDownload/@VERSION@");
+        return httpsConnection;
     }
 
     /**

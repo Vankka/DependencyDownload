@@ -420,6 +420,10 @@ public class DependencyManager {
 
     private void downloadDependency(Dependency dependency, List<Repository> repositories)
             throws IOException, NoSuchAlgorithmException {
+        if (repositories.isEmpty()) {
+            throw new RuntimeException("No repositories provided");
+        }
+
         Path dependencyPath = getPathForDependency(dependency, false);
 
         if (!Files.exists(dependencyPath.getParent())) {
@@ -438,6 +442,7 @@ public class DependencyManager {
         Files.createFile(dependencyPath);
 
         RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
+        boolean anyFailures = false;
         for (Repository repository : repositories) {
             try {
                 MessageDigest digest = MessageDigest.getInstance(dependency.getHashingAlgorithm());
@@ -454,7 +459,11 @@ public class DependencyManager {
             } catch (Throwable e) {
                 Files.deleteIfExists(dependencyPath);
                 failure.addSuppressed(e);
+                anyFailures = true;
             }
+        }
+        if (!anyFailures) {
+            throw new RuntimeException("Nothing failed yet nothing passed");
         }
         throw failure;
     }
