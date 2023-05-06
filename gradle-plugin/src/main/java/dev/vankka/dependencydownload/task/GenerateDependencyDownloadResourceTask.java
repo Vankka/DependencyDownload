@@ -17,8 +17,9 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.internal.artifacts.repositories.resolver.MavenUniqueSnapshotComponentIdentifier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
 
 import javax.inject.Inject;
@@ -32,13 +33,14 @@ import java.util.*;
 
 public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask {
 
-    @Input
+    @Classpath
     public abstract Property<Configuration> getConfiguration();
 
     @OutputDirectory
     public abstract RegularFileProperty getFileLocation();
 
     @Input
+    @Optional
     public abstract Property<String> getFile();
 
     @Input
@@ -52,14 +54,11 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
 
     private final List<Relocation> relocations = new ArrayList<>();
 
-    private static final String DEFAULT_FILE = "";
-
     @Inject
     public GenerateDependencyDownloadResourceTask(ObjectFactory factory) {
         getConfiguration().convention(
                 getProject().getConfigurations().getByName(DependencyDownloadGradlePlugin.BASE_CONFIGURATION_NAME));
         getFileLocation().convention(getConfiguration().flatMap(conf -> factory.fileProperty().fileValue(getResourceDirectory(conf))));
-        getFile().convention(DEFAULT_FILE);
         getIncludeShadowJarRelocations().convention(true);
         getHashingAlgorithm().convention("SHA-256");
         getResourceSplittingStrategy().convention(ResourceSplittingStrategy.SINGLE_FILE);
@@ -117,8 +116,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
     }
 
     private File getResourceDirectory(Configuration configuration) {
-        JavaPluginConvention javaPluginConvention = getProject().getConvention().getPlugin(JavaPluginConvention.class);
-        SourceSetContainer sourceSets = javaPluginConvention.getSourceSets();
+        JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
+        SourceSetContainer sourceSets = javaPluginExtension.getSourceSets();
         SourceSet sourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
         SourceSetOutput output = sourceSet.getOutput();
 
@@ -255,8 +254,16 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             Files.createDirectories(resourcesDirectory);
         }
 
-        String file = getFile().get();
-        if (file.equals(DEFAULT_FILE)) {
+        String file = getFile().getOrElse("");
+        if (!file.trim().isEmpty() && !dependencies.isEmpty()) {
+            Dependency dependency = dependencies.get(0);
+            file = file
+                    .replace("%group%", dependency.getGroup())
+                    .replace("%module%", dependency.getModule())
+                    .replace("%version%", dependency.getVersion())
+                    .replace("%classifier%", dependency.getClassifier() != null ? dependency.getClassifier() : "")
+                    .replace("%hash%", dependency.getHash());
+        } else if (file.trim().isEmpty()) {
             switch (splittingStrategy) {
                 default:
                 case SINGLE_FILE:
@@ -270,14 +277,6 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
                             + (classifier != null ? "-" + classifier : "") + ".txt";
                     break;
             }
-        } else if (splittingStrategy != ResourceSplittingStrategy.SINGLE_FILE) {
-            Dependency dependency = dependencies.get(0);
-            file = file
-                    .replace("%group%", dependency.getGroup())
-                    .replace("%module%", dependency.getModule())
-                    .replace("%version%", dependency.getVersion())
-                    .replace("%classifier%", dependency.getClassifier() != null ? dependency.getClassifier() : "")
-                    .replace("%hash%", dependency.getHash());
         }
 
         Path dependenciesFile = fileLocation.resolve(file);
