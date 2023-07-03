@@ -33,6 +33,7 @@ gradlePlugin {
             displayName = 'DependencyDownload Plugin'
             description = 'A plugin to generate a metadata file for downloading dependencies during runtime'
             implementationClass = 'dev.vankka.dependencydownload.DependencyDownloadGradlePlugin'
+            tags.addAll('runtime', 'dependency', 'download')
         }
     }
 }
