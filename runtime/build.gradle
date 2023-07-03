@@ -1,17 +1,22 @@
 apply plugin: 'java-library'
-apply plugin: 'net.kyori.blossom'
 
 dependencies {
     api project(':common')
     implementation 'me.lucko:jar-relocator:1.5'
 }
 
-blossom {
-    replaceToken('@VERSION@', project.version, 'src/main/java/dev/vankka/dependencydownload/repository/Repository.java')
+tasks.register('generateSources', Copy) {
+    from 'src/main/java/dev/vankka/dependencydownload/repository/Repository.java'
+    into "$buildDir/generated-src"
+    filter { line -> line.replaceAll('@VERSION@', project.version) }
+}
+
+compileJava {
+    dependsOn generateSources
+    compileJava.source "$buildDir/generated-src"
 }
 
 jar {
-    dependsOn blossomSourceReplacementJava
     manifest {
         attributes("Automatic-Module-Name": "dev.vankka.dependencydownload.runtime")
     }
