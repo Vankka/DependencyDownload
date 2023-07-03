@@ -6,15 +6,13 @@ dependencies {
 }
 
 tasks.register('generateSources', Copy) {
-    from 'src/main/java/dev/vankka/dependencydownload/repository/Repository.java'
+    from 'src/main/java'
+    //include 'dev/vankka/dependencydownload/repository/Repository.java'
     into "$buildDir/generated-src"
-    filter { line -> line.replaceAll('@VERSION@', project.version) }
+    filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: ['VERSION': project.version])
 }
-
-compileJava {
-    dependsOn generateSources
-    compileJava.source "$buildDir/generated-src"
-}
+compileJava.source = "$buildDir/generated-src"
+compileJava.dependsOn generateSources
 
 jar {
     manifest {
