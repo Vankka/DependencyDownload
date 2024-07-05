@@ -1,6 +1,6 @@
 # DependencyDownload
-[![Maven Central](https://img.shields.io/maven-central/v/dev.vankka/dependencydownload-runtime?label=release)](https://search.maven.org/search?q=g:dev.vankka%20a:dependencydownload-*)
-[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka/dependencydownload-runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/#view-repositories;snapshots~browsestorage~dev)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.vankka/dependencydownload-runtime?label=release)](https://search.maven.org/search?q=g:dev.vankka%20a:dependencydownload)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/dev.vankka/dependencydownload-runtime?label=dev&server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/#view-repositories;snapshots~browsestorage~dev/vankka)
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/dev.vankka.dependencydownload.plugin?label=gradle%20plugin)](https://plugins.gradle.org/plugin/dev.vankka.dependencydownload.plugin)
 
 A library to download, relocate & load dependencies during runtime.
