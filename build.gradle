@@ -1,17 +1,19 @@
 plugins {
-    id 'java'
-    id 'maven-publish'
-    id 'org.cadixdev.licenser' version '0.6.1'
+    id 'net.kyori.indra.licenser.spotless' version '2.2.0' apply false
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 version = '1.3.2-SNAPSHOT'
+group = 'dev.vankka'
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+    apply plugin: 'net.kyori.indra.licenser.spotless'
 
-    group = 'dev.vankka'
+    group = rootProject.group
     version = rootProject.version
 
     repositories {
@@ -28,15 +30,11 @@ subprojects {
         withSourcesJar()
     }
 
-    license {
-        header = rootProject.file('buildscript/LICENSE_HEADER')
-        properties {
-            String inception = '2021'
-            String currentYear = Calendar.getInstance().get(Calendar.YEAR)
-
-            year = inception == currentYear ? currentYear : inception + "-" + currentYear
-        }
-        include '**/*.java' // only java files
+    indraSpotlessLicenser {
+        licenseHeaderFile(rootProject.file('buildscript/LICENSE_HEADER'))
+        newLine(true)
+        property('inception', '2021')
+        property('year_now', String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
     }
 
     if (System.getenv('SONATYPE_KEY') == null && !project.hasProperty("signing.keyId")) {
@@ -48,66 +46,59 @@ subprojects {
         return
     }
 
-    task publishProject {
-        apply plugin: 'maven-publish'
-        apply plugin: 'signing'
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
 
-        dependsOn tasks.build
+                artifactId = 'dependencydownload-' + project.name
+                pom {
+                    name = 'dependencydownload-' + project.name
+                    packaging = 'jar'
+                    description = 'A library to download dependencies during runtime'
+                    url = 'https://github.com/Vankka/DependencyDownload'
 
-        publishing {
-            publications {
-                maven(MavenPublication) {
-                    from components.java
-
-                    artifactId = 'dependencydownload-' + project.name
-                    pom {
-                        name = 'dependencydownload-' + project.name
-                        packaging = 'jar'
-                        description = 'A library to download dependencies during runtime'
+                    scm {
+                        connection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
+                        developerConnection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
                         url = 'https://github.com/Vankka/DependencyDownload'
+                    }
 
-                        scm {
-                            connection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
-                            developerConnection = 'scm:git:https://github.com/Vankka/DependencyDownload.git'
-                            url = 'https://github.com/Vankka/DependencyDownload'
-                        }
-
-                        licenses {
-                            license {
-                                name = 'MIT License'
-                                url = 'https://www.opensource.org/licenses/mit-license.php'
-                            }
-                        }
-
-                        developers {
-                            developer {
-                                id = 'Vankka'
-                            }
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://www.opensource.org/licenses/mit-license.php'
                         }
                     }
-                }
-            }
 
-            signing {
-                sign publishing.publications.maven
-
-                def key = System.getenv('SONATYPE_KEY')
-                if (key != null) {
-                    useInMemoryPgpKeys(key, System.getenv('SONATYPE_KEY_PASS'))
-                }
-            }
-
-            repositories {
-                maven {
-                    credentials {
-                        username findProperty('ossrhUsername')
-                        password findProperty('ossrhPassword')
+                    developers {
+                        developer {
+                            id = 'Vankka'
+                        }
                     }
-                    url version.endsWith('-SNAPSHOT') ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
                 }
             }
         }
+    }
 
-        finalizedBy publish
+    if (System.getenv('SIGNING_KEY') != null || project.hasProperty("signing.keyId")) {
+        signing {
+            sign publishing.publications.maven
+
+            def key = System.getenv('SIGNING_KEY')
+            if (key != null) {
+                useInMemoryPgpKeys(key, System.getenv('SIGNING_KEY_PASS'))
+            }
+        }
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
+            snapshotRepositoryUrl.set(uri('https://s01.oss.sonatype.org/content/repositories/snapshots/'))
+            packageGroup = rootProject.group
+        }
     }
 }
