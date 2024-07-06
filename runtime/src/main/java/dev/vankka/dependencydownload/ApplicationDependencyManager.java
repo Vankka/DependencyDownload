@@ -26,6 +26,7 @@ package dev.vankka.dependencydownload;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.path.CleanupPathProvider;
 import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import dev.vankka.dependencydownload.path.DirectoryDependencyPathProvider;
 import dev.vankka.dependencydownload.relocation.Relocation;
@@ -35,11 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.*;
 
 /**
  * An application level dependency manager to prevent loading in the same dependency multiple times.
@@ -47,18 +44,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @SuppressWarnings("unused") // API
 public class ApplicationDependencyManager {
 
-    private final Set<Dependency> dependencies = new CopyOnWriteArraySet<>();
-    private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
-
-    private final DependencyPathProvider dependencyPathProvider;
+    private final DependencyManager dependencyManager;
 
     /**
      * Creates a {@link ApplicationDependencyManager}, uses the {@link DirectoryDependencyPathProvider}.
-     * @param cacheDirectory the directory used for downloaded and relocated dependencies.
+     * @param dependencyDirectory the directory used for downloaded and relocated dependencies.
      * @see DirectoryDependencyPathProvider
      */
-    public ApplicationDependencyManager(@NotNull Path cacheDirectory) {
-        this(new DirectoryDependencyPathProvider(cacheDirectory));
+    public ApplicationDependencyManager(@NotNull Path dependencyDirectory) {
+        this(new DirectoryDependencyPathProvider(dependencyDirectory));
     }
 
     /**
@@ -66,7 +60,7 @@ public class ApplicationDependencyManager {
      * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
      */
     public ApplicationDependencyManager(@NotNull DependencyPathProvider dependencyPathProvider) {
-        this.dependencyPathProvider = dependencyPathProvider;
+        this.dependencyManager = new DependencyManager(dependencyPathProvider);
     }
 
     /**
@@ -75,8 +69,21 @@ public class ApplicationDependencyManager {
      * @param relocations the relocations to add
      * @see #addRelocation(Relocation)
      */
-    public void addRelocations(@NotNull Collection<Relocation> relocations) {
-        this.relocations.addAll(relocations);
+    public ApplicationDependencyManager addRelocations(@NotNull Relocation... relocations) {
+        return addRelocations(Arrays.asList(relocations));
+    }
+
+    /**
+     * Adds the provided relocations to this {@link ApplicationDependencyManager},
+     * they will be used in all {@link DependencyManager}s created by this manager after being added.
+     * @param relocations the relocations to add
+     * @see #addRelocation(Relocation)
+     */
+    public ApplicationDependencyManager addRelocations(@NotNull Collection<Relocation> relocations) {
+        synchronized (dependencyManager) {
+            dependencyManager.addRelocations(relocations);
+        }
+        return this;
     }
 
     /**
@@ -85,14 +92,17 @@ public class ApplicationDependencyManager {
      * @param relocation the relocation
      * @see #addRelocations(Collection)
      */
-    public void addRelocation(@NotNull Relocation relocation) {
-        this.relocations.add(relocation);
+    public ApplicationDependencyManager addRelocation(@NotNull Relocation relocation) {
+        synchronized (dependencyManager) {
+            dependencyManager.addRelocation(relocation);
+        }
+        return this;
     }
 
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, located by the provided {@link URL}.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -109,7 +119,7 @@ public class ApplicationDependencyManager {
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, provided as the {@link String} content of the resource.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -125,7 +135,7 @@ public class ApplicationDependencyManager {
     /**
      * Includes the dependencies and relocations from the dependency resource generated
      * by the gradle plugin, provided as a list of lines from the resource.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -140,7 +150,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the dependencies and relocations from the {@link DependencyDownloadResource} provided as an argument.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -153,7 +163,7 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the provided dependencies and relocations.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -169,7 +179,21 @@ public class ApplicationDependencyManager {
 
     /**
      * Includes the provided dependencies.
-     * 
+     * <p>
+     * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
+     * and will include all the relocations from this manager.
+     *
+     * @param dependencies the dependencies to include
+     * @return the {@link DependencyManager} to load in the dependencies
+     */
+    @CheckReturnValue
+    public DependencyManager include(@NotNull Dependency... dependencies) {
+        return include(Arrays.asList(dependencies));
+    }
+
+    /**
+     * Includes the provided dependencies.
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -178,17 +202,19 @@ public class ApplicationDependencyManager {
      */
     @CheckReturnValue
     public DependencyManager include(@NotNull Collection<Dependency> dependencies) {
-        dependencies = dependencies(dependencies);
+        dependencies = addMissingDependencies(dependencies);
 
-        DependencyManager manager = new DependencyManager(dependencyPathProvider);
+        DependencyManager manager = new DependencyManager(dependencyManager.getDependencyPathProvider());
         manager.addDependencies(dependencies);
-        manager.addRelocations(this.relocations);
+        synchronized (this.dependencyManager) {
+            dependencyManager.addRelocations(this.dependencyManager.getRelocations());
+        }
         return manager;
     }
 
     /**
      * Includes the dependencies and relocations from the provided {@link DependencyManager}, the {@link DependencyPathProvider} will be preserved.
-     * 
+     * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
      * and will include all the relocations from this manager.
      *
@@ -198,29 +224,93 @@ public class ApplicationDependencyManager {
     @CheckReturnValue
     public DependencyManager include(@NotNull DependencyManager manager) {
         addRelocations(manager.getRelocations());
-        List<Dependency> dependencies = dependencies(manager.getDependencies());
+        List<Dependency> dependencies = addMissingDependencies(manager.getDependencies());
 
         DependencyManager dependencyManager = new DependencyManager(manager.getDependencyPathProvider());
         dependencyManager.addDependencies(dependencies);
-        dependencyManager.addRelocations(this.relocations);
+        synchronized (this.dependencyManager) {
+            dependencyManager.addRelocations(this.dependencyManager.getRelocations());
+        }
         return dependencyManager;
     }
 
-    private List<Dependency> dependencies(Collection<Dependency> old) {
-        List<Dependency> newDependencies = new ArrayList<>(old.size());
+    /**
+     * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded.
+     *
+     * @param dependency the dependency.
+     * @param relocated if the path should be for the relocated or unrelocated file of the Dependency
+     * @return the path for the dependency
+     */
+    @NotNull
+    public Path getPathForDependency(@NotNull Dependency dependency, boolean relocated) {
+        synchronized (dependencyManager) {
+            return dependencyManager.getPathForDependency(dependency, relocated);
+        }
+    }
+
+    /**
+     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link ApplicationDependencyManager},
+     * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
+     * @param relocated relocated paths, otherwise unrelocated paths
+     * @return paths to all dependencies, original or relocated
+     * @see #getPathForDependency(Dependency, boolean)
+     */
+    @NotNull
+    public Set<Path> getPaths(boolean relocated) {
+        synchronized (dependencyManager) {
+            return dependencyManager.getPaths(relocated);
+        }
+    }
+
+    /**
+     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link ApplicationDependencyManager},
+     * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
+     * @param includeRelocated if relocated paths should also be included
+     * @return paths to all dependencies (and optionally relocated dependencies)
+     * @see #getPathForDependency(Dependency, boolean)
+     */
+    @NotNull
+    public Set<Path> getAllPaths(boolean includeRelocated) {
+        synchronized (dependencyManager) {
+            return dependencyManager.getAllPaths(includeRelocated);
+        }
+    }
+
+    /**
+     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getPathsForAllStoredDependencies()} implementation.
+     * <b>
+     * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
+     * </b>
+     *
+     * @throws IOException if listing files in the cache directory or deleting files in it fails
+     * @throws IllegalStateException if this DependencyManager's dependencyPathProvider isn't an instance of {@link CleanupPathProvider}
+     * @see CleanupPathProvider
+     */
+    public void cleanupCacheDirectory() throws IOException, IllegalStateException {
+        synchronized (dependencyManager) {
+            dependencyManager.cleanupCacheDirectory();
+        }
+    }
+
+    private List<Dependency> addMissingDependencies(Collection<Dependency> old) {
+        List<Dependency> missingDependencies = new ArrayList<>(old.size());
         for (Dependency dependency : old) {
             String group = dependency.getGroupId();
             String artifact = dependency.getArtifactId();
 
-            // Check that there is no dependency with the same group + artifact id
-            boolean noMatch = this.dependencies.stream()
-                    .noneMatch(dep -> dep.getGroupId().equals(group)
-                            && dep.getArtifactId().equals(artifact));
+            synchronized (dependencyManager) {
+                // Check that there is no dependency with the same group + artifact id
+                boolean noMatch = dependencyManager.getDependencies().stream()
+                        .noneMatch(dep -> dep.getGroupId().equals(group)
+                                && dep.getArtifactId().equals(artifact));
 
-            if (noMatch && this.dependencies.add(dependency)) {
-                newDependencies.add(dependency);
+                if (noMatch) {
+                    missingDependencies.add(dependency);
+                    dependencyManager.addDependency(dependency);
+                }
             }
         }
-        return newDependencies;
+        return missingDependencies;
     }
+
 }

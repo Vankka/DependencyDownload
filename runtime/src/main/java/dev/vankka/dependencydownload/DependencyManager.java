@@ -36,7 +36,6 @@ import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -55,8 +54,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * The main class responsible for downloading, optionally relocating and loading in dependencies.
@@ -72,11 +69,11 @@ public class DependencyManager {
 
     /**
      * Creates a {@link DependencyManager}, uses the {@link DirectoryDependencyPathProvider}.
-     * @param cacheDirectory the directory used for downloaded and relocated dependencies.
+     * @param dependencyDirectory the directory used for downloaded and relocated dependencies.
      * @see DirectoryDependencyPathProvider
      */
-    public DependencyManager(@NotNull Path cacheDirectory) {
-        this(new DirectoryDependencyPathProvider(cacheDirectory));
+    public DependencyManager(@NotNull Path dependencyDirectory) {
+        this(new DirectoryDependencyPathProvider(dependencyDirectory));
     }
 
     /**
@@ -93,8 +90,9 @@ public class DependencyManager {
      * @throws IllegalStateException if this method is executed after downloading
      * @see #addDependencies(Collection)
      */
-    public void addDependency(@NotNull Dependency dependency) {
+    public DependencyManager addDependency(@NotNull Dependency dependency) {
         addDependencies(Collections.singleton(dependency));
+        return this;
     }
 
     /**
@@ -103,16 +101,27 @@ public class DependencyManager {
      * @throws IllegalStateException if this method is executed after downloading
      * @see #addDependency(Dependency)
      */
-    public void addDependencies(@NotNull Collection<Dependency> dependencies) {
+    public DependencyManager addDependencies(@NotNull Dependency... dependencies) {
+        return addDependencies(Arrays.asList(dependencies));
+    }
+
+    /**
+     * Adds dependencies to this {@link DependencyManager}.
+     * @param dependencies the dependencies to add
+     * @throws IllegalStateException if this method is executed after downloading
+     * @see #addDependency(Dependency)
+     */
+    public DependencyManager addDependencies(@NotNull Collection<Dependency> dependencies) {
         if (step.get() > 0) {
             throw new IllegalStateException("Cannot add dependencies after downloading");
         }
         this.dependencies.addAll(dependencies);
+        return this;
     }
 
     /**
      * Gets the dependencies in this {@link DependencyManager}.
-     * @return a unmodifiable list of dependencies
+     * @return an unmodifiable list of dependencies
      */
     @NotNull
     public List<Dependency> getDependencies() {
@@ -125,8 +134,9 @@ public class DependencyManager {
      * @throws IllegalStateException if this method is executed after relocating
      * @see #addRelocations(Collection)
      */
-    public void addRelocation(@NotNull Relocation relocation) {
+    public DependencyManager addRelocation(@NotNull Relocation relocation) {
         addRelocations(Collections.singleton(relocation));
+        return this;
     }
 
     /**
@@ -135,11 +145,22 @@ public class DependencyManager {
      * @throws IllegalStateException if this method is executed after relocating
      * @see #addRelocation(Relocation)
      */
-    public void addRelocations(@NotNull Collection<Relocation> relocations) {
+    public DependencyManager addRelocations(@NotNull Relocation... relocations) {
+        return addRelocations(Arrays.asList(relocations));
+    }
+
+    /**
+     * Adds relocations to this {@link DependencyManager}.
+     * @param relocations the relocations to add
+     * @throws IllegalStateException if this method is executed after relocating
+     * @see #addRelocation(Relocation)
+     */
+    public DependencyManager addRelocations(@NotNull Collection<Relocation> relocations) {
         if (step.get() > 2) {
             throw new IllegalStateException("Cannot add relocations after relocating");
         }
         this.relocations.addAll(relocations);
+        return this;
     }
 
     /**
@@ -167,9 +188,9 @@ public class DependencyManager {
      * @param resourceURL the url to the resource
      * @throws IOException if the resource cannot be read
      */
-    public void loadFromResource(@NotNull URL resourceURL) throws IOException {
+    public DependencyManager loadFromResource(@NotNull URL resourceURL) throws IOException {
         DependencyDownloadResource resource = new DependencyDownloadResource(resourceURL);
-        loadFromResource(resource);
+        return loadFromResource(resource);
     }
 
     /**
@@ -177,9 +198,9 @@ public class DependencyManager {
      *
      * @param fileContents the contents of the file generated by the gradle plugin as a {@link String}
      */
-    public void loadFromResource(@NotNull String fileContents) {
+    public DependencyManager loadFromResource(@NotNull String fileContents) {
         DependencyDownloadResource resource = new DependencyDownloadResource(fileContents);
-        loadFromResource(resource);
+        return loadFromResource(resource);
     }
 
     /**
@@ -187,9 +208,9 @@ public class DependencyManager {
      *
      * @param fileLines all the lines from the file generated by the gradle plugin
      */
-    public void loadFromResource(@NotNull List<String> fileLines) {
+    public DependencyManager loadFromResource(@NotNull List<String> fileLines) {
         DependencyDownloadResource resource = new DependencyDownloadResource(fileLines);
-        loadFromResource(resource);
+        return loadFromResource(resource);
     }
 
     /**
@@ -197,9 +218,10 @@ public class DependencyManager {
      *
      * @param resource the resource
      */
-    public void loadFromResource(@NotNull DependencyDownloadResource resource) {
+    public DependencyManager loadFromResource(@NotNull DependencyDownloadResource resource) {
         dependencies.addAll(resource.getDependencies());
         relocations.addAll(resource.getRelocations());
+        return this;
     }
 
     /**
@@ -278,7 +300,7 @@ public class DependencyManager {
      * @see #relocate(Executor, ClassLoader)
      */
     public CompletableFuture<Void>[] relocate(@Nullable Executor executor) {
-        return relocate(executor, getClass().getClassLoader());
+        return relocate(executor, null);
     }
 
     /**
@@ -356,6 +378,22 @@ public class DependencyManager {
     /**
      * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager},
      * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
+     * @param relocated relocated paths, otherwise unrelocated paths
+     * @return paths to all dependencies, original or relocated
+     * @see #getPathForDependency(Dependency, boolean)
+     */
+    @NotNull
+    public Set<Path> getPaths(boolean relocated) {
+        Set<Path> paths = new HashSet<>();
+        for (Dependency dependency : dependencies) {
+            paths.add(getPathForDependency(dependency, relocated));
+        }
+        return paths;
+    }
+
+    /**
+     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager},
+     * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
      * @param includeRelocated if relocated paths should also be included
      * @return paths to all dependencies (and optionally relocated dependencies)
      * @see #getPathForDependency(Dependency, boolean)
@@ -363,17 +401,13 @@ public class DependencyManager {
     @NotNull
     public Set<Path> getAllPaths(boolean includeRelocated) {
         Set<Path> paths = new HashSet<>();
-        for (Dependency dependency : dependencies) {
-            paths.add(getPathForDependency(dependency, false));
-            if (includeRelocated) {
-                paths.add(getPathForDependency(dependency, true));
-            }
-        }
+        paths.addAll(getPaths(false));
+        paths.addAll(getPaths(includeRelocated));
         return paths;
     }
 
     /**
-     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getCleanupPath()} implementation.
+     * Removes files that are not known dependencies of this {@link DependencyManager} from {@link CleanupPathProvider#getPathsForAllStoredDependencies()} implementation.
      * <b>
      * This only accounts for dependencies that are included in this {@link DependencyManager} instance!
      * </b>
@@ -387,20 +421,17 @@ public class DependencyManager {
         if (!(dependencyPathProvider instanceof CleanupPathProvider)) {
             throw new IllegalStateException("Cache directory cleanup is only available when dependencyPathProvider is a instance of CleanupPathProvider");
         }
-        Path cacheDirectory = ((CleanupPathProvider) dependencyPathProvider).getCleanupPath();
-        Set<Path> paths = getAllPaths(true);
-        Set<Path> filesToDelete;
-        try (Stream<Path> stream = Files.list(cacheDirectory)) {
-            filesToDelete = stream
-                    // Ignore directories
-                    .filter(path -> !Files.isDirectory(path))
-                    // Ignore files in this DependencyManager
-                    .filter(path -> !paths.contains(path))
-                    .collect(Collectors.toSet());
-        }
 
-        for (Path path : filesToDelete) {
-            Files.delete(path);
+        Collection<Path> existingPaths = ((CleanupPathProvider) dependencyPathProvider).getPathsForAllStoredDependencies();
+        Set<Path> currentPaths = getAllPaths(true);
+        for (Path existingPath : existingPaths) {
+            if (Files.isDirectory(existingPath)) {
+                continue;
+            }
+
+            if (!currentPaths.contains(existingPath)) {
+                Files.delete(existingPath);
+            }
         }
     }
 

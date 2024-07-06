@@ -27,7 +27,12 @@ package dev.vankka.dependencydownload.path;
 import dev.vankka.dependencydownload.dependency.Dependency;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Default dependency path provider, automatically used when using the {@link dev.vankka.dependencydownload.DependencyManager#DependencyManager(Path)} constructor.
@@ -35,23 +40,25 @@ import java.nio.file.Path;
 public class DirectoryDependencyPathProvider implements CleanupPathProvider {
 
     private static final String RELOCATED_FILE_PREFIX = "relocated_";
-    private final Path cacheDirectory;
+    private final Path dependencyDirectory;
 
     /**
      * Creates a {@link DirectoryDependencyPathProvider}.
-     * @param cacheDirectory the directory used for downloaded and relocated dependencies.
+     * @param dependencyDirectory the directory used for downloaded and relocated dependencies.
      */
-    public DirectoryDependencyPathProvider(Path cacheDirectory) {
-        this.cacheDirectory = cacheDirectory;
-    }
-
-    @Override
-    public @NotNull Path getCleanupPath() {
-        return cacheDirectory;
+    public DirectoryDependencyPathProvider(Path dependencyDirectory) {
+        this.dependencyDirectory = dependencyDirectory;
     }
 
     @Override
     public @NotNull Path getDependencyPath(@NotNull Dependency dependency, boolean relocated) {
-        return cacheDirectory.resolve((relocated ? RELOCATED_FILE_PREFIX : "") + dependency.getStoredFileName());
+        return dependencyDirectory.resolve((relocated ? RELOCATED_FILE_PREFIX : "") + dependency.getStoredFileName());
+    }
+
+    @Override
+    public @NotNull Collection<Path> getPathsForAllStoredDependencies() throws IOException {
+        try (Stream<Path> paths = Files.list(dependencyDirectory)) {
+            return paths.collect(Collectors.toList());
+        }
     }
 }
