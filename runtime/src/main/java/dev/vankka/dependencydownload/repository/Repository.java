@@ -32,8 +32,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
-import java.util.Map;
 
 public interface Repository {
 
@@ -50,9 +48,7 @@ public interface Repository {
      * @return the url
      * @throws MalformedURLException if the url syntax is invalid
      */
-    default URL createURL(Dependency dependency) throws MalformedURLException {
-        return new URL(getHost() + '/' + dependency.getMavenPath());
-    }
+    URL createURL(Dependency dependency) throws MalformedURLException;
 
     /**
      * Opens a connection from an url generated with {@link #createURL(Dependency)}.

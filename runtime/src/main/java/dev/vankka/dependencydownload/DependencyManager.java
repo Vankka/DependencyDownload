@@ -529,7 +529,7 @@ public class DependencyManager {
             Repository repository,
             Path dependencyPath,
             MessageDigest digest
-    ) throws Throwable {
+    ) throws IOException {
         URLConnection connection = repository.openConnection(dependency);
 
         byte[] buffer = new byte[repository.getBufferSize()];

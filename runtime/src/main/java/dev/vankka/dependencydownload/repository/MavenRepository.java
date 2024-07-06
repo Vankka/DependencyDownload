@@ -24,10 +24,14 @@
 
 package dev.vankka.dependencydownload.repository;
 
+import dev.vankka.dependencydownload.dependency.Dependency;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 @SuppressWarnings("unused") // API
-public class StandardRepository implements Repository {
+public class MavenRepository implements Repository {
 
     private final String host;
 
@@ -35,7 +39,7 @@ public class StandardRepository implements Repository {
      * Create a standard repository.
      * @param host the host address, if it ends with {@code /} it will automatically be removed
      */
-    public StandardRepository(@NotNull String host) {
+    public MavenRepository(@NotNull String host) {
         this.host = host.endsWith("/")
                     ? host.substring(0, host.length() - 1)
                     : host;
@@ -44,5 +48,10 @@ public class StandardRepository implements Repository {
     @Override
     public String getHost() {
         return host;
+    }
+
+    @Override
+    public URL createURL(Dependency dependency) throws MalformedURLException {
+        return new URL(getHost() + '/' + dependency.getMavenPath());
     }
 }

@@ -30,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A maven dependency.
  */
-@SuppressWarnings("unused") // API
 public interface Dependency {
 
     String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
@@ -113,6 +112,7 @@ public interface Dependency {
         return getGroupId()
                 + '-' + getArtifactId()
                 + '-' + getVersion()
+                + (isSnapshot() ? "-" + getSnapshotVersion() : "")
                 + (classifier != null ? '-' + classifier : "")
                 + ".jar";
     }
