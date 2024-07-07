@@ -6,7 +6,7 @@ plugins {
 version = '2.0.0-SNAPSHOT'
 group = 'dev.vankka'
 
-subprojects {
+allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
@@ -35,15 +35,6 @@ subprojects {
         newLine(true)
         property('inception', '2021')
         property('year_now', String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
-    }
-
-    if (System.getenv('SONATYPE_KEY') == null && !project.hasProperty("signing.keyId")) {
-        // Don't even bother with signing/publishing if neither of these are set
-        return
-    }
-    if (project.name == 'gradle-plugin' || project.name == 'jarinjar' /* only the subprojects of this project are nedded */) {
-        // Gradle plugin has it's own configuration
-        return
     }
 
     publishing {
@@ -91,6 +82,9 @@ subprojects {
             }
         }
     }
+}
+tasks.withType(PublishToMavenRepository).configureEach {
+    it.enabled = false
 }
 
 nexusPublishing {

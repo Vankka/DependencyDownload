@@ -46,7 +46,7 @@ if (!version.endsWith('-SNAPSHOT')) {
         website = 'https://github.com/Vankka/DependencyDownload'
         vcsUrl = 'https://github.com/Vankka/DependencyDownload'
     }
-    publishing {
-        enabled = false
+    tasks.withType(PublishToMavenRepository).configureEach {
+        it.enabled = false
     }
 }
