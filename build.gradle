@@ -12,8 +12,6 @@ allprojects {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'net.kyori.indra.licenser.spotless'
-    sourceCompatability = JavaVersion.VERSION_1_8
-    targetCompatability = JavaVersion.VERSION_1_8
 
     group = rootProject.group
     version = rootProject.version
@@ -28,6 +26,8 @@ allprojects {
     }
 
     java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
         withJavadocJar()
         withSourcesJar()
     }
