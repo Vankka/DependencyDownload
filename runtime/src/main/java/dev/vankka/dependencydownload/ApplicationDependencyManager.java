@@ -69,6 +69,7 @@ public class ApplicationDependencyManager {
      * @param relocations the relocations to add
      * @see #addRelocation(Relocation)
      */
+    @NotNull
     public ApplicationDependencyManager addRelocations(@NotNull Relocation... relocations) {
         return addRelocations(Arrays.asList(relocations));
     }
@@ -79,6 +80,7 @@ public class ApplicationDependencyManager {
      * @param relocations the relocations to add
      * @see #addRelocation(Relocation)
      */
+    @NotNull
     public ApplicationDependencyManager addRelocations(@NotNull Collection<Relocation> relocations) {
         synchronized (dependencyManager) {
             dependencyManager.addRelocations(relocations);
@@ -92,6 +94,7 @@ public class ApplicationDependencyManager {
      * @param relocation the relocation
      * @see #addRelocations(Collection)
      */
+    @NotNull
     public ApplicationDependencyManager addRelocation(@NotNull Relocation relocation) {
         synchronized (dependencyManager) {
             dependencyManager.addRelocation(relocation);
@@ -111,6 +114,7 @@ public class ApplicationDependencyManager {
      * @throws IOException if reading the file from the {@link URL} fails
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager includeResource(@NotNull URL resourceURL) throws IOException {
         DependencyDownloadResource resource = new DependencyDownloadResource(resourceURL);
         return includeResource(resource);
@@ -127,6 +131,7 @@ public class ApplicationDependencyManager {
      * @return the {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager includeResource(@NotNull String resourceContent) {
         DependencyDownloadResource resource = new DependencyDownloadResource(resourceContent);
         return includeResource(resource);
@@ -143,6 +148,7 @@ public class ApplicationDependencyManager {
      * @return the {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager includeResource(@NotNull List<String> resourceLines) {
         DependencyDownloadResource resource = new DependencyDownloadResource(resourceLines);
         return includeResource(resource);
@@ -157,6 +163,8 @@ public class ApplicationDependencyManager {
      * @param resource the resource to get dependencies and relocations from
      * @return the {@link DependencyManager} to load in the dependencies
      */
+    @CheckReturnValue
+    @NotNull
     public DependencyManager includeResource(@NotNull DependencyDownloadResource resource) {
         return include(resource.getDependencies(), resource.getRelocations());
     }
@@ -172,6 +180,7 @@ public class ApplicationDependencyManager {
      * @return the {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager include(@NotNull List<Dependency> dependencies, @NotNull List<Relocation> relocations) {
         addRelocations(relocations);
         return include(dependencies);
@@ -187,6 +196,7 @@ public class ApplicationDependencyManager {
      * @return the {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager include(@NotNull Dependency... dependencies) {
         return include(Arrays.asList(dependencies));
     }
@@ -201,6 +211,7 @@ public class ApplicationDependencyManager {
      * @return the {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
+    @NotNull
     public DependencyManager include(@NotNull Collection<Dependency> dependencies) {
         dependencies = addMissingDependencies(dependencies);
 
@@ -219,12 +230,15 @@ public class ApplicationDependencyManager {
      * and will include all the relocations from this manager.
      *
      * @param manager the manager to get dependencies and relocations from
-     * @return a new {@link DependencyManager} to load in the dependencies
+     * @return a new {@link DependencyManager} to load in the dependencies, or the same manager if it already loaded
      */
-    @CheckReturnValue
+    @NotNull
     public DependencyManager include(@NotNull DependencyManager manager) {
         addRelocations(manager.getRelocations());
         List<Dependency> dependencies = addMissingDependencies(manager.getDependencies());
+        if (manager.isLoaded()) {
+            return dependencyManager;
+        }
 
         DependencyManager dependencyManager = new DependencyManager(manager.getDependencyPathProvider());
         dependencyManager.addDependencies(dependencies);
