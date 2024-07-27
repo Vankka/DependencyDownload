@@ -24,52 +24,54 @@
 
 package dev.vankka.dependencydownload.logger;
 
-import dev.vankka.dependencydownload.DependencyManager;
 import dev.vankka.dependencydownload.dependency.Dependency;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class DependencyDownloadSlf4jLogger implements Logger {
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DependencyManager.class);
+    private final org.slf4j.Logger logger;
+
+    public DependencyDownloadSlf4jLogger(org.slf4j.Logger logger) {
+        this.logger = logger;
+    }
 
     @Override
     public void downloadDependency(Dependency dependency) {
-        LOGGER.info("Downloading {}", dependency.getMavenArtifact());
+        logger.info("Downloading {}", dependency.getMavenArtifact());
     }
 
     @Override
     public void downloadSuccess(Dependency dependency) {
-        LOGGER.info("Downloaded {}", dependency.getMavenArtifact());
+        logger.info("Downloaded {}", dependency.getMavenArtifact());
     }
 
     @Override
     public void downloadFailed(Dependency dependency, Throwable throwable) {
-        LOGGER.error("Failed to download {}", dependency.getMavenArtifact());
+        logger.error("Failed to download {}", dependency.getMavenArtifact());
     }
 
     @Override
     public void relocateStart() {
-        LOGGER.info("Relocating dependencies...");
+        logger.info("Relocating dependencies...");
     }
 
     @Override
     public void relocateDependency(Dependency dependency) {
-        LOGGER.debug("Relocating {}", dependency.getMavenArtifact());
+        logger.debug("Relocating {}", dependency.getMavenArtifact());
     }
 
     @Override
     public void loadStart() {
-        LOGGER.info("Loading dependencies...");
+        logger.info("Loading dependencies...");
     }
 
     @Override
     public void loadDependency(Dependency dependency) {
-        LOGGER.debug("Loading {}", dependency.getMavenArtifact());
+        logger.debug("Loading {}", dependency.getMavenArtifact());
     }
 
     @Override
     public void loadEnd() {
-        LOGGER.info("Loaded dependencies");
+        logger.info("Loaded dependencies");
     }
 }
