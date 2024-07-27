@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Default dependency path provider, automatically used when using the {@link dev.vankka.dependencydownload.DependencyManager#DependencyManager(Path)} constructor.
+ * Basic dependency path provider for saving files in a single directory.
  */
 public class DirectoryDependencyPathProvider implements CleanupPathProvider {
 

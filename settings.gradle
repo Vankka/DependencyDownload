@@ -4,6 +4,7 @@ rootProject.name = 'DependencyDownload'
         'common',
         'gradle-plugin',
         'runtime',
+        'logger:slf4j',
         'jarinjar:common', 'jarinjar:bootstrap', 'jarinjar:loader'
 ].each {
     include it

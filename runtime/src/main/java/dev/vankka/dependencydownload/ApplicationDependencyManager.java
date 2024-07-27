@@ -24,12 +24,12 @@
 
 package dev.vankka.dependencydownload;
 
-import com.google.errorprone.annotations.CheckReturnValue;
 import dev.vankka.dependencydownload.dependency.Dependency;
 import dev.vankka.dependencydownload.path.CleanupPathProvider;
 import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import dev.vankka.dependencydownload.relocation.Relocation;
 import dev.vankka.dependencydownload.resource.DependencyDownloadResource;
+import org.jetbrains.annotations.CheckReturnValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

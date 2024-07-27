@@ -1,0 +1,5 @@
+// Empty project, no need to publish
+// only the subprojects of this project are relevant
+tasks.withType(PublishToMavenRepository).configureEach {
+    it.enabled = false
+}

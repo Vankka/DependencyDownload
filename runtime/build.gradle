@@ -1,15 +1,18 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 apply plugin: 'java-library'
 
 dependencies {
-    api project(':common')
+    implementation project(':common')
     implementation 'me.lucko:jar-relocator:1.5'
 }
 
+var buildDir = layout.buildDirectory.get()
 tasks.register('generateSources', Copy) {
     from 'src/main/java'
     //include 'dev/vankka/dependencydownload/repository/Repository.java'
     into "$buildDir/generated-src"
-    filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: ['VERSION': project.version])
+    filter(ReplaceTokens, tokens: ['VERSION': project.version])
 }
 compileJava.source = "$buildDir/generated-src"
 compileJava.dependsOn generateSources
