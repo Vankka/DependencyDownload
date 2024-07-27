@@ -26,6 +26,7 @@ package dev.vankka.dependencydownload;
 
 import dev.vankka.dependencydownload.dependency.Dependency;
 import dev.vankka.dependencydownload.dependency.MavenDependency;
+import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -41,20 +42,20 @@ public class ApplicationDependencyManagerTest {
 
     @Test
     public void addDependencyTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(Paths.get("."));
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
         Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
     }
 
     @Test
     public void duplicationTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(Paths.get("."));
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
         Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
         Assertions.assertEquals(0, manager.include(Collections.singleton(dependency1)).getDependencies().size());
     }
 
     @Test
     public void multipleTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(Paths.get("."));
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
         Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
         Assertions.assertEquals(1, manager.include(Collections.singleton(dependency2)).getDependencies().size());
     }

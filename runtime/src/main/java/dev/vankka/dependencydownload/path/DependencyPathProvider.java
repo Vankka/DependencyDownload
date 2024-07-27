@@ -35,6 +35,10 @@ import java.nio.file.Path;
 @FunctionalInterface
 public interface DependencyPathProvider {
 
+    static DirectoryDependencyPathProvider directory(Path directory) {
+        return new DirectoryDependencyPathProvider(directory);
+    }
+
     /**
      * Gets the path that should be used for the provided {@link Dependency}.
      * @param dependency the dependency
