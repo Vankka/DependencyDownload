@@ -154,7 +154,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
         }
 
         // Create new
-        File generatedResourcesDir = new File(getProject().getBuildDir(), "generated-resources");
+        File buildDirectory = getProject().getLayout().getBuildDirectory().get().getAsFile();
+        File generatedResourcesDir = new File(buildDirectory, "generated-resources");
         File dependencyDownloadResources = new File(generatedResourcesDir, configurationName);
         Map<String, Object> properties = new HashMap<>();
         properties.put("builtBy", configuration);
