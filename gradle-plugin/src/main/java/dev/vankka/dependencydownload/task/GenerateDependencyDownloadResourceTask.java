@@ -410,7 +410,7 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             }
 
             File file = moduleArtifact.getFile();
-            hash = HashUtil.getFileHash(file, hashingAlgorithm);
+            hash = HashUtil.getFileHash(file.toPath(), hashingAlgorithm);
 
             ComponentArtifactIdentifier componentArtifactIdentifier = moduleArtifact.getId();
             ComponentIdentifier componentIdentifier = componentArtifactIdentifier.getComponentIdentifier();

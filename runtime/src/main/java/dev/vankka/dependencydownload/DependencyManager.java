@@ -27,6 +27,7 @@ package dev.vankka.dependencydownload;
 import dev.vankka.dependencydownload.classpath.ClasspathAppender;
 import dev.vankka.dependencydownload.common.util.HashUtil;
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.logger.Logger;
 import dev.vankka.dependencydownload.path.CleanupPathProvider;
 import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import dev.vankka.dependencydownload.path.DirectoryDependencyPathProvider;
@@ -53,7 +54,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * The main class responsible for downloading, optionally relocating and loading in dependencies.
@@ -62,6 +65,7 @@ import java.util.function.BiFunction;
 public class DependencyManager {
 
     private final DependencyPathProvider dependencyPathProvider;
+    private final Logger logger;
 
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
     private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
@@ -73,7 +77,17 @@ public class DependencyManager {
      * @see DirectoryDependencyPathProvider
      */
     public DependencyManager(@NotNull Path dependencyDirectory) {
-        this(new DirectoryDependencyPathProvider(dependencyDirectory));
+        this(new DirectoryDependencyPathProvider(dependencyDirectory), Logger.NOOP.INSTANCE);
+    }
+
+    /**
+     * Creates a {@link DependencyManager}, uses the {@link DirectoryDependencyPathProvider}.
+     * @param dependencyDirectory the directory used for downloaded and relocated dependencies.
+     * @param logger the logger to use
+     * @see DirectoryDependencyPathProvider
+     */
+    public DependencyManager(@NotNull Path dependencyDirectory, @NotNull Logger logger) {
+        this(new DirectoryDependencyPathProvider(dependencyDirectory), logger);
     }
 
     /**
@@ -81,7 +95,17 @@ public class DependencyManager {
      * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
      */
     public DependencyManager(@NotNull DependencyPathProvider dependencyPathProvider) {
+        this(dependencyPathProvider, Logger.NOOP.INSTANCE);
+    }
+
+    /**
+     * Creates a {@link DependencyManager}.
+     * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
+     * @param logger the logger to use
+     */
+    public DependencyManager(@NotNull DependencyPathProvider dependencyPathProvider, @NotNull Logger logger) {
         this.dependencyPathProvider = dependencyPathProvider;
+        this.logger = logger;
     }
 
     /**
@@ -255,11 +279,26 @@ public class DependencyManager {
      * @throws IllegalStateException if dependencies have already been queued for download once
      */
     public CompletableFuture<Void>[] download(@Nullable Executor executor, @NotNull List<Repository> repositories) {
+        if (repositories.isEmpty()) {
+            throw new IllegalArgumentException("No repositories provided");
+        }
         if (!step.compareAndSet(0, 1)) {
             throw new IllegalStateException("Download has already been executed");
         }
-        return forEachDependency(executor, dependency -> downloadDependency(dependency, repositories),
-                (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact(), cause));
+
+        logger.downloadStart();
+        try {
+            return forEachDependency(
+                    executor,
+                    dependency -> downloadDependency(dependency, repositories),
+                    (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact(), cause),
+                    logger::downloadDependency,
+                    logger::downloadSuccess,
+                    logger::downloadFailed
+            );
+        } finally {
+            logger.downloadEnd();
+        }
     }
 
     /**
@@ -334,8 +373,20 @@ public class DependencyManager {
 
         JarRelocatorHelper helper = new JarRelocatorHelper(
                 jarRelocatorLoader != null ? jarRelocatorLoader : getClass().getClassLoader());
-        return forEachDependency(executor, dependency -> relocateDependency(dependency, helper),
-                (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause));
+
+        try {
+            logger.relocateStart();
+            return forEachDependency(
+                    executor,
+                    dependency -> relocateDependency(dependency, helper),
+                    (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause),
+                    logger::relocateDependency,
+                    logger::relocateSuccess,
+                    logger::relocateFailed
+            );
+        } finally {
+            logger.relocateEnd();
+        }
     }
 
     /**
@@ -367,8 +418,20 @@ public class DependencyManager {
         }
         step.set(3);
 
-        return forEachDependency(executor, dependency -> loadDependency(dependency, classpathAppender, currentStep == 2),
-                (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause));
+        try {
+            logger.loadStart();
+
+            return forEachDependency(
+                    executor,
+                    dependency -> loadDependency(dependency, classpathAppender, currentStep == 2),
+                    (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause),
+                    logger::loadDependency,
+                    logger::loadSuccess,
+                    logger::loadFailed
+            );
+        } finally {
+            logger.loadEnd();
+        }
     }
 
     /**
@@ -447,7 +510,10 @@ public class DependencyManager {
     private CompletableFuture<Void>[] forEachDependency(
             Executor executor,
             ExceptionalConsumer<Dependency> runnable,
-            BiFunction<Dependency, Throwable, Throwable> dependencyException
+            BiFunction<Dependency, Throwable, Throwable> dependencyException,
+            Consumer<Dependency> startLog,
+            Consumer<Dependency> successLog,
+            BiConsumer<Dependency, Throwable> failLog
     ) {
         int size = dependencies.size();
         CompletableFuture<Void>[] futures = new CompletableFuture[size];
@@ -457,12 +523,14 @@ public class DependencyManager {
 
             CompletableFuture<Void> future = new CompletableFuture<>();
             Runnable run = () -> {
+                startLog.accept(dependency);
                 try {
                     runnable.run(dependency);
                     future.complete(null);
+                    successLog.accept(dependency);
                 } catch (Throwable t) {
-                    future.completeExceptionally(
-                            dependencyException.apply(dependency, t));
+                    future.completeExceptionally(dependencyException.apply(dependency, t));
+                    failLog.accept(dependency, t);
                 }
             };
 
@@ -484,10 +552,6 @@ public class DependencyManager {
 
     private void downloadDependency(Dependency dependency, List<Repository> repositories)
             throws IOException, NoSuchAlgorithmException {
-        if (repositories.isEmpty()) {
-            throw new RuntimeException("No repositories provided");
-        }
-
         Path dependencyPath = getPathForDependency(dependency, false);
 
         if (!Files.exists(dependencyPath.getParent())) {
@@ -495,7 +559,7 @@ public class DependencyManager {
         }
 
         if (Files.exists(dependencyPath)) {
-            String fileHash = HashUtil.getFileHash(dependencyPath.toFile(), dependency.getHashingAlgorithm());
+            String fileHash = HashUtil.getFileHash(dependencyPath, dependency.getHashingAlgorithm());
             if (fileHash.equals(dependency.getHash())) {
                 // This dependency is already downloaded & the hash matches
                 return;
@@ -515,19 +579,19 @@ public class DependencyManager {
                 String hash = HashUtil.getHash(digest);
                 String dependencyHash = dependency.getHash();
                 if (!hash.equals(dependencyHash)) {
-                    throw new RuntimeException("Failed to verify file hash: " + hash + " should've been: " + dependencyHash);
+                    throw new SecurityException("Failed to verify file hash: " + hash + " should've been: " + dependencyHash);
                 }
 
                 // Success
                 return;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Files.deleteIfExists(dependencyPath);
                 failure.addSuppressed(e);
                 anyFailures = true;
             }
         }
         if (!anyFailures) {
-            throw new RuntimeException("Nothing failed yet nothing passed");
+            throw new IllegalStateException("Nothing failed yet nothing passed");
         }
         throw failure;
     }

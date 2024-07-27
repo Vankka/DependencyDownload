@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -49,10 +51,10 @@ public final class HashUtil {
      * @throws NoSuchAlgorithmException if the provided algorithm couldn't be found
      * @throws IOException if reading the file was unsuccessful
      */
-    public static String getFileHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {
+    public static String getFileHash(Path file, String algorithm) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance(algorithm);
 
-        try (InputStream inputStream = new FileInputStream(file)) {
+        try (InputStream inputStream = Files.newInputStream(file)) {
             byte[] buffer = new byte[1024];
             int total;
             while ((total = inputStream.read(buffer)) != -1) {
