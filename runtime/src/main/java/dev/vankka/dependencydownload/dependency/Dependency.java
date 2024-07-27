@@ -101,7 +101,11 @@ public interface Dependency {
     @NotNull
     default String getFileName() {
         String classifier = getClassifier();
-        return getArtifactId() + '-' + getVersion() + (classifier != null ? '-' + classifier : "") + ".jar";
+        String snapshotVersion = getSnapshotVersion();
+        return getArtifactId()
+                + '-' + (snapshotVersion != null ? snapshotVersion : getVersion())
+                + (classifier != null ? '-' + classifier : "")
+                + ".jar";
     }
 
     /**
