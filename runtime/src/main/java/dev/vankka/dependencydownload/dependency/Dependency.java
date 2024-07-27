@@ -90,7 +90,9 @@ public interface Dependency {
      * If this is a snapshot dependency.
      * @return true if this dependency is a snapshot
      */
-    boolean isSnapshot();
+    default boolean isSnapshot() {
+        return getSnapshotVersion() != null;
+    }
 
     /**
      * Returns the file name for the end of the maven path.

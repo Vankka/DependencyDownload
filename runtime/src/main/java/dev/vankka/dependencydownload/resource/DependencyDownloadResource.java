@@ -25,9 +25,9 @@
 package dev.vankka.dependencydownload.resource;
 
 import dev.vankka.dependencydownload.dependency.Dependency;
-import dev.vankka.dependencydownload.dependency.SnapshotDependency;
-import dev.vankka.dependencydownload.dependency.StandardDependency;
+import dev.vankka.dependencydownload.dependency.MavenDependency;
 import dev.vankka.dependencydownload.relocation.Relocation;
+import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -142,11 +142,11 @@ public class DependencyDownloadResource {
                 throw new IllegalArgumentException("Resource format is invalid: invalid dependency GAV: " + maven + " (" + partCount + ")");
             }
 
-            String group = mavenParts[0];
-            String artifact = mavenParts[1];
-            String version = mavenParts[2];
-            String snapshotTimestamp;
-            String classifier;
+            @Subst("dev.vankka") String group = mavenParts[0];
+            @Subst("dependencydownload-runtime") String artifact = mavenParts[1];
+            @Subst("1.0.0") String version = mavenParts[2];
+            @Subst("20240101.120000-1") String snapshotTimestamp;
+            @Subst("shaded") String classifier;
             if (version.endsWith("-SNAPSHOT")) {
                 snapshotTimestamp = mavenParts[3];
                 if (partCount == 5) {
@@ -165,7 +165,7 @@ public class DependencyDownloadResource {
 
             Dependency dependency;
             if (snapshotTimestamp == null) {
-                dependency = new StandardDependency(
+                dependency = new MavenDependency(
                         group,
                         artifact,
                         version,
@@ -174,7 +174,7 @@ public class DependencyDownloadResource {
                         hashingAlgorithm
                 );
             } else {
-                dependency = new SnapshotDependency(
+                dependency = new MavenDependency(
                         group,
                         artifact,
                         version,

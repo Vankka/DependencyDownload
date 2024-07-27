@@ -24,11 +24,13 @@
 
 package dev.vankka.dependencydownload.dependency;
 
+import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class StandardDependency implements Dependency {
+public class MavenDependency implements Dependency {
 
     private final String groupId;
     private final String artifactId;
@@ -36,12 +38,33 @@ public class StandardDependency implements Dependency {
     private final String classifier;
     private final String hash;
     private final String hashingAlgorithm;
+    private final String snapshotVersion;
 
-    public StandardDependency(String groupId, String artifactId, String version, String classifier, String hash, String hashingAlgorithm) {
+    public MavenDependency(
+            @NotNull String groupId,
+            @NotNull String artifactId,
+            @NotNull String version,
+            @Nullable String classifier,
+            @NotNull String hash,
+            @NotNull String hashingAlgorithm
+    ) {
+        this(groupId, artifactId, version, classifier, null, hash, hashingAlgorithm);
+    }
+
+    public MavenDependency(
+            @NotNull String groupId,
+            @NotNull String artifactId,
+            @NotNull String version,
+            @Nullable String classifier,
+            @Nullable @Pattern("[0-9]{8}\\.[0-9]{6}-[0-9]+") String snapshotVersion,
+            @NotNull String hash,
+            @NotNull String hashingAlgorithm
+    ) {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
         this.classifier = classifier;
+        this.snapshotVersion = snapshotVersion;
         this.hash = hash;
         this.hashingAlgorithm = hashingAlgorithm;
     }
@@ -68,7 +91,7 @@ public class StandardDependency implements Dependency {
 
     @Override
     public String getSnapshotVersion() {
-        return null;
+        return snapshotVersion;
     }
 
     @Override
@@ -82,23 +105,19 @@ public class StandardDependency implements Dependency {
     }
 
     @Override
-    public boolean isSnapshot() {
-        return false;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        StandardDependency that = (StandardDependency) o;
+        MavenDependency that = (MavenDependency) o;
         return Objects.equals(groupId, that.groupId)
                 && Objects.equals(artifactId, that.artifactId)
                 && Objects.equals(version, that.version)
-                && Objects.equals(classifier, that.classifier);
+                && Objects.equals(classifier, that.classifier)
+                && Objects.equals(snapshotVersion, that.snapshotVersion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(groupId, artifactId, version, classifier);
+        return Objects.hash(groupId, artifactId, version, classifier, snapshotVersion);
     }
 }
