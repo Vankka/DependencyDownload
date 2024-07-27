@@ -44,9 +44,9 @@ dependencies {
 ## Usage
 ```java
 
-DependencyManager manager = new DependencyManager(new File("cache").toPath());
-manager.addDependency(new StandardDependency("com.example", "examplepackage", "1.0.0", "<hash>", "SHA-256"));
-manager.addRelocation(new Relocation("com.example", "relocated.com.example"));
+DependencyManager manager = new DependencyManager(DependencyPathProvider.directory(Paths.get("cache")));
+manager.addDependencies(new StandardDependency("com.example", "examplepackage", "1.0.0", "<hash>", "SHA-256"));
+manager.addRelocations(new Relocation("com.example", "relocated.com.example"));
 
 Executor executor = Executors.newCachedThreadPool();
 
