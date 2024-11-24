@@ -49,7 +49,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -66,7 +65,7 @@ public class DependencyManager {
     private final Logger logger;
 
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
-    private final Set<Relocation> relocations = new CopyOnWriteArraySet<>();
+    private final List<Relocation> relocations = new CopyOnWriteArrayList<>();
     private final AtomicInteger step = new AtomicInteger(0);
 
     /**
@@ -74,7 +73,7 @@ public class DependencyManager {
      * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
      */
     public DependencyManager(@NotNull DependencyPathProvider dependencyPathProvider) {
-        this(dependencyPathProvider, Logger.NOOP.INSTANCE);
+        this(dependencyPathProvider, Logger.NOOP);
     }
 
     /**
@@ -149,8 +148,8 @@ public class DependencyManager {
      * @return an unmodifiable set of relocations
      */
     @NotNull
-    public Set<Relocation> getRelocations() {
-        return Collections.unmodifiableSet(relocations);
+    public List<Relocation> getRelocations() {
+        return Collections.unmodifiableList(relocations);
     }
 
     /**
@@ -216,9 +215,8 @@ public class DependencyManager {
         try {
             return forEachDependency(
                     executor,
-                    dependency -> downloadDependency(dependency, repositories),
+                    dependency -> downloadDependency(dependency, repositories, () -> logger.downloadDependency(dependency)),
                     (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact(), cause),
-                    logger::downloadDependency,
                     logger::downloadSuccess,
                     logger::downloadFailed
             );
@@ -304,9 +302,11 @@ public class DependencyManager {
             logger.relocateStart();
             return forEachDependency(
                     executor,
-                    dependency -> relocateDependency(dependency, helper),
+                    dependency -> {
+                        logger.relocateDependency(dependency);
+                        return relocateDependency(dependency, helper);
+                    },
                     (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause),
-                    logger::relocateDependency,
                     logger::relocateSuccess,
                     logger::relocateFailed
             );
@@ -349,9 +349,11 @@ public class DependencyManager {
 
             return forEachDependency(
                     executor,
-                    dependency -> loadDependency(dependency, classpathAppender, currentStep == 2),
+                    dependency -> {
+                        logger.loadDependency(dependency);
+                        return loadDependency(dependency, classpathAppender, currentStep == 2);
+                    },
                     (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause),
-                    logger::loadDependency,
                     logger::loadSuccess,
                     logger::loadFailed
             );
@@ -397,9 +399,10 @@ public class DependencyManager {
      */
     @NotNull
     public Set<Path> getAllPaths(boolean includeRelocated) {
-        Set<Path> paths = new HashSet<>();
-        paths.addAll(getPaths(false));
-        paths.addAll(getPaths(includeRelocated));
+        Set<Path> paths = new HashSet<>(getPaths(false));
+        if (includeRelocated) {
+            paths.addAll(getPaths(true));
+        }
         return paths;
     }
 
@@ -435,9 +438,8 @@ public class DependencyManager {
     @SuppressWarnings("unchecked")
     private CompletableFuture<Void>[] forEachDependency(
             Executor executor,
-            ExceptionalConsumer<Dependency> runnable,
+            Step<Dependency> runnable,
             BiFunction<Dependency, Throwable, Throwable> dependencyException,
-            Consumer<Dependency> startLog,
             Consumer<Dependency> successLog,
             BiConsumer<Dependency, Throwable> failLog
     ) {
@@ -449,11 +451,13 @@ public class DependencyManager {
 
             CompletableFuture<Void> future = new CompletableFuture<>();
             Runnable run = () -> {
-                startLog.accept(dependency);
                 try {
-                    runnable.run(dependency);
+                    boolean stepPerformed = runnable.run(dependency);
                     future.complete(null);
-                    successLog.accept(dependency);
+
+                    if (stepPerformed) {
+                        successLog.accept(dependency);
+                    }
                 } catch (Throwable t) {
                     future.completeExceptionally(dependencyException.apply(dependency, t));
                     failLog.accept(dependency, t);
@@ -476,7 +480,7 @@ public class DependencyManager {
         return futures;
     }
 
-    private void downloadDependency(Dependency dependency, List<Repository> repositories)
+    private boolean downloadDependency(Dependency dependency, List<Repository> repositories, Runnable beginDownloadCallback)
             throws IOException, NoSuchAlgorithmException {
         Path dependencyPath = getPathForDependency(dependency, false);
 
@@ -484,22 +488,25 @@ public class DependencyManager {
             Files.createDirectories(dependencyPath.getParent());
         }
 
+        MessageDigest digest = MessageDigest.getInstance(dependency.getHashingAlgorithm());
         if (Files.exists(dependencyPath)) {
-            String fileHash = HashUtil.getFileHash(dependencyPath, dependency.getHashingAlgorithm());
+            String fileHash = HashUtil.getFileHash(dependencyPath, digest);
             if (fileHash.equals(dependency.getHash())) {
-                // This dependency is already downloaded & the hash matches
-                return;
+                // This dependency is already downloaded & the hash matches -> skip download
+                return false;
             } else {
+                // Hash does not match, delete file
                 Files.delete(dependencyPath);
             }
         }
+        beginDownloadCallback.run();
         Files.createFile(dependencyPath);
 
         RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
         boolean anyFailures = false;
         for (Repository repository : repositories) {
             try {
-                MessageDigest digest = MessageDigest.getInstance(dependency.getHashingAlgorithm());
+                digest.reset();
                 downloadFromRepository(dependency, repository, dependencyPath, digest);
 
                 String hash = HashUtil.getHash(digest);
@@ -509,7 +516,7 @@ public class DependencyManager {
                 }
 
                 // Success
-                return;
+                return true;
             } catch (Exception e) {
                 Files.deleteIfExists(dependencyPath);
                 failure.addSuppressed(e);
@@ -542,7 +549,7 @@ public class DependencyManager {
         }
     }
 
-    private void relocateDependency(Dependency dependency, JarRelocatorHelper helper) {
+    private boolean relocateDependency(Dependency dependency, JarRelocatorHelper helper) {
         Path dependencyFile = getPathForDependency(dependency, false);
         Path relocatedFile = getPathForDependency(dependency, true);
 
@@ -553,9 +560,10 @@ public class DependencyManager {
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to initialize relocator", e);
         }
+        return true;
     }
 
-    private void loadDependency(
+    private boolean loadDependency(
             Dependency dependency,
             ClasspathAppender classpathAppender,
             boolean relocated
@@ -565,17 +573,16 @@ public class DependencyManager {
                           : getPathForDependency(dependency, false);
 
         classpathAppender.appendFileToClasspath(fileToLoad);
+        return true;
     }
 
-    /**
-     * Helper class to provide a Consumer that throws {@link Throwable}.
-     *
-     * @param <T> the consumable's type
-     */
     @FunctionalInterface
-    private interface ExceptionalConsumer<T> {
+    private interface Step<T> {
 
-        void run(T t) throws Throwable;
+        /**
+         * @return {@code true} if the step was performed, {@code false} if skipped
+         */
+        boolean run(T t) throws Throwable;
     }
 
     private static class JarRelocatorHelper {
@@ -598,8 +605,8 @@ public class DependencyManager {
             }
         }
 
-        public void run(Path from, Path to, Set<Relocation> relocations) throws ReflectiveOperationException {
-            Set<Object> mappedRelocations = new HashSet<>();
+        public void run(Path from, Path to, List<Relocation> relocations) throws ReflectiveOperationException {
+            List<Object> mappedRelocations = new ArrayList<>();
 
             for (Relocation relocation : relocations) {
                 Object mapped = relocationConstructor.newInstance(

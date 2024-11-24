@@ -24,39 +24,34 @@
 
 package dev.vankka.dependencydownload;
 
-import dev.vankka.dependencydownload.dependency.Dependency;
-import dev.vankka.dependencydownload.dependency.MavenDependency;
-import dev.vankka.dependencydownload.path.DependencyPathProvider;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Paths;
 import java.util.Collections;
 
-public class ApplicationDependencyManagerTest {
+import static dev.vankka.dependencydownload.Helpers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-    private final Dependency dependency1 = new MavenDependency("a", "a-a", "", "", "", "");
-    private final Dependency dependency2 = new MavenDependency("b", "b-a", "", "", "", "");
+public class ApplicationDependencyManagerTest {
 
     public ApplicationDependencyManagerTest() {}
 
     @Test
     public void addDependencyTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
-        Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(PATH_PROVIDER);
+        assertEquals(1, manager.include(Collections.singleton(FAKE_DEPENDENCY_1)).getDependencies().size());
     }
 
     @Test
     public void duplicationTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
-        Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
-        Assertions.assertEquals(0, manager.include(Collections.singleton(dependency1)).getDependencies().size());
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(PATH_PROVIDER);
+        assertEquals(1, manager.include(Collections.singleton(FAKE_DEPENDENCY_1)).getDependencies().size());
+        assertEquals(0, manager.include(Collections.singleton(FAKE_DEPENDENCY_1)).getDependencies().size());
     }
 
     @Test
     public void multipleTest() {
-        ApplicationDependencyManager manager = new ApplicationDependencyManager(DependencyPathProvider.directory(Paths.get(".")));
-        Assertions.assertEquals(1, manager.include(Collections.singleton(dependency1)).getDependencies().size());
-        Assertions.assertEquals(1, manager.include(Collections.singleton(dependency2)).getDependencies().size());
+        ApplicationDependencyManager manager = new ApplicationDependencyManager(PATH_PROVIDER);
+        assertEquals(1, manager.include(Collections.singleton(FAKE_DEPENDENCY_1)).getDependencies().size());
+        assertEquals(1, manager.include(Collections.singleton(FAKE_DEPENDENCY_2)).getDependencies().size());
     }
 }

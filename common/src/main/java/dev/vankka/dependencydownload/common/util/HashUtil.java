@@ -27,13 +27,11 @@ package dev.vankka.dependencydownload.common.util;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * A helper class to get standard hashes from {@link MessageDigest}s and {@link File}s.
@@ -46,13 +44,12 @@ public final class HashUtil {
     /**
      * Gets the hash of the provided file
      * @param file the file
-     * @param algorithm the hashing algorithm (used on {@link MessageDigest#getInstance(String)})
+     * @param digest the message digest to use to make the hash
      * @return the file's hash in standard format
-     * @throws NoSuchAlgorithmException if the provided algorithm couldn't be found
      * @throws IOException if reading the file was unsuccessful
      */
-    public static String getFileHash(Path file, String algorithm) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance(algorithm);
+    public static String getFileHash(Path file, MessageDigest digest) throws IOException {
+        digest.reset();
 
         try (InputStream inputStream = Files.newInputStream(file)) {
             byte[] buffer = new byte[1024];

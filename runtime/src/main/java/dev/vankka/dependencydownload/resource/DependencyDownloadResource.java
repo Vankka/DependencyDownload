@@ -211,6 +211,8 @@ public class DependencyDownloadResource {
         }
         if (relocationStep > 1) { // has pattern & replacement w/o include and/or exclude
             relocations.add(new Relocation(pattern, replacement, include, null));
+        } else if (relocationStep == 1) {
+            throw new IllegalArgumentException("Resource format is invalid: relocation missing replacement");
         }
     }
 

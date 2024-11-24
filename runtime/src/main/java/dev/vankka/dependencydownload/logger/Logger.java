@@ -32,6 +32,11 @@ import dev.vankka.dependencydownload.dependency.Dependency;
 @SuppressWarnings("unused")
 public interface Logger {
 
+    /**
+     * No operation logger, logs nothing.
+     */
+    Logger NOOP = new Logger() {};
+
     default void downloadStart() {}
     default void downloadEnd() {}
 
@@ -53,9 +58,4 @@ public interface Logger {
     default void loadSuccess(Dependency dependency) {}
     default void loadFailed(Dependency dependency, Throwable throwable) {}
 
-    class NOOP implements Logger {
-        public static NOOP INSTANCE = new NOOP();
-
-        private NOOP() {}
-    }
 }

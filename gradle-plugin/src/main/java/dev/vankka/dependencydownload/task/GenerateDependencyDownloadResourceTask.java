@@ -52,6 +52,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
@@ -411,7 +412,8 @@ public abstract class GenerateDependencyDownloadResourceTask extends DefaultTask
             }
 
             File file = moduleArtifact.getFile();
-            hash = HashUtil.getFileHash(file.toPath(), hashingAlgorithm);
+            MessageDigest digest = MessageDigest.getInstance(hashingAlgorithm);
+            hash = HashUtil.getFileHash(file.toPath(), digest);
 
             ComponentArtifactIdentifier componentArtifactIdentifier = moduleArtifact.getId();
             ComponentIdentifier componentIdentifier = componentArtifactIdentifier.getComponentIdentifier();

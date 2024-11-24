@@ -1,0 +1,3 @@
+===ALGORITHM SHA-256
+===RELOCATIONS
+dev.vankka

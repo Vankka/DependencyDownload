@@ -1,0 +1,2 @@
+===ALGORITHM SHA-256
+dev.vankka:dependencydownload-runtime:1.3.1
