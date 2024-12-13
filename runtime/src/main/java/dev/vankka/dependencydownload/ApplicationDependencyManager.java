@@ -25,6 +25,7 @@
 package dev.vankka.dependencydownload;
 
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.logger.Logger;
 import dev.vankka.dependencydownload.path.CleanupPathProvider;
 import dev.vankka.dependencydownload.path.DependencyPathProvider;
 import dev.vankka.dependencydownload.relocation.Relocation;
@@ -49,6 +50,14 @@ public class ApplicationDependencyManager {
      * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
      */
     public ApplicationDependencyManager(@NotNull DependencyPathProvider dependencyPathProvider) {
+        this(dependencyPathProvider, Logger.NOOP);
+    }
+    /**
+     * Creates a {@link ApplicationDependencyManager}.
+     * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
+     * @param logger the logger to use
+     */
+    public ApplicationDependencyManager(@NotNull DependencyPathProvider dependencyPathProvider, Logger logger) {
         this.dependencyManager = new DependencyManager(dependencyPathProvider);
     }
 

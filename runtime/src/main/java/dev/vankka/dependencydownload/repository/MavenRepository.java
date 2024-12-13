@@ -25,6 +25,7 @@
 package dev.vankka.dependencydownload.repository;
 
 import dev.vankka.dependencydownload.dependency.Dependency;
+import dev.vankka.dependencydownload.dependency.MavenDependency;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
@@ -52,6 +53,9 @@ public class MavenRepository implements Repository {
 
     @Override
     public URL createURL(Dependency dependency) throws MalformedURLException {
-        return new URL(getHost() + '/' + dependency.getMavenPath());
+        if (!(dependency instanceof MavenDependency)) {
+            throw new IllegalArgumentException("Not a MavenDependency");
+        }
+        return new URL(getHost() + '/' + ((MavenDependency) dependency).getMavenPath());
     }
 }

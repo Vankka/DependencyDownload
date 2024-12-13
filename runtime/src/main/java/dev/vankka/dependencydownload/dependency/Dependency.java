@@ -28,11 +28,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A maven dependency.
+ * A dependency.
  */
 public interface Dependency {
-
-    String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
 
     /**
      * The group id of the dependency.
@@ -124,26 +122,11 @@ public interface Dependency {
     }
 
     /**
-     * The path to this dependency on a maven repository, without the protocol, domain or slash at the beginning.
-     * @return the path to this dependency's jar file on a maven repository
-     */
-    @NotNull
-    default String getMavenPath() {
-        return String.format(
-                MAVEN_PATH_FORMAT,
-                getGroupId().replace('.', '/'),
-                getArtifactId(),
-                getVersion(),
-                getFileName()
-        );
-    }
-
-    /**
      * Gets the group id, artifact id, version and classifier (if specified) seperated by semicolons.
-     * @return the maven artifact's GAV and classifier parameters seperated by semicolons (<code>:</code>)
+     * @return the artifact's GAV and classifier parameters seperated by semicolons (<code>:</code>)
      */
     @NotNull
-    default String getMavenArtifact() {
+    default String getGAV() {
         String classifier = getClassifier();
         return getGroupId() + ":" + getArtifactId() + ":" + getVersion() + (classifier != null ? ":" + classifier : "");
     }

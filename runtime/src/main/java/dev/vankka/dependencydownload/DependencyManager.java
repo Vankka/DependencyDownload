@@ -216,7 +216,7 @@ public class DependencyManager {
             return forEachDependency(
                     executor,
                     dependency -> downloadDependency(dependency, repositories, () -> logger.downloadDependency(dependency)),
-                    (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getMavenArtifact(), cause),
+                    (dependency, cause) -> new RuntimeException("Failed to download dependency " + dependency.getGAV(), cause),
                     logger::downloadSuccess,
                     logger::downloadFailed
             );
@@ -309,7 +309,7 @@ public class DependencyManager {
                         logger.relocateDependency(dependency);
                         return relocateDependency(dependency, helper);
                     },
-                    (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getMavenArtifact(), cause),
+                    (dependency, cause) -> new RuntimeException("Failed to relocate dependency " + dependency.getGAV(), cause),
                     logger::relocateSuccess,
                     logger::relocateFailed
             );
@@ -357,7 +357,7 @@ public class DependencyManager {
                         logger.loadDependency(dependency);
                         return loadDependency(dependency, classpathAppender, currentStep == 2);
                     },
-                    (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getMavenArtifact(), cause),
+                    (dependency, cause) -> new RuntimeException("Failed to load dependency " + dependency.getGAV(), cause),
                     logger::loadSuccess,
                     logger::loadFailed
             );

@@ -37,17 +37,17 @@ public class DependencyDownloadSlf4jLogger implements Logger {
 
     @Override
     public void downloadDependency(Dependency dependency) {
-        logger.info("Downloading {}", dependency.getMavenArtifact());
+        logger.info("Downloading {}", dependency.getGAV());
     }
 
     @Override
     public void downloadSuccess(Dependency dependency) {
-        logger.info("Downloaded {}", dependency.getMavenArtifact());
+        logger.info("Downloaded {}", dependency.getGAV());
     }
 
     @Override
     public void downloadFailed(Dependency dependency, Throwable throwable) {
-        logger.error("Failed to download {}", dependency.getMavenArtifact());
+        logger.error("Failed to download {}", dependency.getGAV());
     }
 
     @Override
@@ -57,7 +57,7 @@ public class DependencyDownloadSlf4jLogger implements Logger {
 
     @Override
     public void relocateDependency(Dependency dependency) {
-        logger.debug("Relocating {}", dependency.getMavenArtifact());
+        logger.debug("Relocating {}", dependency.getGAV());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class DependencyDownloadSlf4jLogger implements Logger {
 
     @Override
     public void loadDependency(Dependency dependency) {
-        logger.debug("Loading {}", dependency.getMavenArtifact());
+        logger.debug("Loading {}", dependency.getGAV());
     }
 
     @Override

@@ -32,6 +32,8 @@ import java.util.Objects;
 
 public class MavenDependency implements Dependency {
 
+    String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
+
     private final String groupId;
     private final String artifactId;
     private final String version;
@@ -102,6 +104,21 @@ public class MavenDependency implements Dependency {
     @Override
     public @NotNull String getHashingAlgorithm() {
         return hashingAlgorithm;
+    }
+
+    /**
+     * The path to this dependency on a maven repository, without the protocol, domain or slash at the beginning.
+     * @return the path to this dependency's jar file on a maven repository
+     */
+    @NotNull
+    public String getMavenPath() {
+        return String.format(
+                MAVEN_PATH_FORMAT,
+                getGroupId().replace('.', '/'),
+                getArtifactId(),
+                getVersion(),
+                getFileName()
+        );
     }
 
     @Override
