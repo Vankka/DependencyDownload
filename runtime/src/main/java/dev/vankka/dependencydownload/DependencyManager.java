@@ -66,6 +66,10 @@ public class DependencyManager {
 
     private final List<Dependency> dependencies = new CopyOnWriteArrayList<>();
     private final List<Relocation> relocations = new CopyOnWriteArrayList<>();
+
+    /**
+     * 0 initial, 1 download, 2 relocate, 3 load.
+     */
     private final AtomicInteger step = new AtomicInteger(0);
 
     /**
@@ -207,6 +211,7 @@ public class DependencyManager {
         if (repositories.isEmpty()) {
             throw new IllegalArgumentException("No repositories provided");
         }
+        // If step is 0 (initial) change to 1
         if (!step.compareAndSet(0, 1)) {
             throw new IllegalStateException("Download has already been executed");
         }
@@ -287,6 +292,7 @@ public class DependencyManager {
      * @see #relocate(Executor)
      */
     public CompletableFuture<Void>[] relocate(@Nullable Executor executor, @Nullable ClassLoader jarRelocatorLoader) {
+        // If step is 1 (load) change to 2, otherwise don't alter
         int currentStep = step.getAndUpdate(current -> current == 1 ? 2 : current);
         if (currentStep == 0) {
             throw new IllegalStateException("Download hasn't been executed");
@@ -341,6 +347,7 @@ public class DependencyManager {
      * @throws IllegalStateException if dependencies have already been queued for load once
      */
     public CompletableFuture<Void>[] load(@Nullable Executor executor, @NotNull ClasspathAppender classpathAppender) {
+        // If step is 1 (download), 2 (relocate) change to 3 (load), otherwise keep current
         int currentStep = step.getAndUpdate(current -> current == 0 || current == 3 ? current : 3);
         if (currentStep == 0) {
             throw new IllegalArgumentException("Download hasn't been executed");
