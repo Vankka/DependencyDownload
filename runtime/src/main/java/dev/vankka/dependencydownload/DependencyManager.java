@@ -70,7 +70,7 @@ public class DependencyManager {
 
     /**
      * Creates a {@link DependencyManager}.
-     * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
+     * @param dependencyPathProvider the {@link DependencyPathProvider} used for deciding where to store downloaded and relocated dependencies
      */
     public DependencyManager(@NotNull DependencyPathProvider dependencyPathProvider) {
         this(dependencyPathProvider, Logger.NOOP);
@@ -78,7 +78,7 @@ public class DependencyManager {
 
     /**
      * Creates a {@link DependencyManager}.
-     * @param dependencyPathProvider the dependencyPathProvider used for downloaded and relocated dependencies
+     * @param dependencyPathProvider the {@link DependencyPathProvider} used for deciding where to store downloaded and relocated dependencies
      * @param logger the logger to use
      */
     public DependencyManager(@NotNull DependencyPathProvider dependencyPathProvider, @NotNull Logger logger) {
@@ -184,7 +184,7 @@ public class DependencyManager {
     /**
      * Download all the dependencies in this {@link DependencyManager}.
      *
-     * @param executor the executor that will run the downloads, or {@code null} to run it on the current thread
+     * @param executor the executor that will run the download for every dependency, or {@code null} to run sequentially on the current thread
      * @param repositories an ordered list of repositories that will be tried one-by-one in order
      * @return a future that will complete exceptionally if a single dependency fails to download from all repositories,
      * otherwise completes when all dependencies are downloaded
@@ -198,7 +198,7 @@ public class DependencyManager {
      * Download all the dependencies in this {@link DependencyManager}.
      * If one of the downloads fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
-     * @param executor the executor that will run the downloads, or {@code null} to run it on the current thread
+     * @param executor the executor that will run the download for every dependency, or {@code null} to run sequentially on the current thread
      * @param repositories an ordered list of repositories that will be tried one-by-one, in order
      * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for download once
@@ -229,7 +229,7 @@ public class DependencyManager {
      * Relocates all the dependencies with the relocations in this {@link DependencyManager}. This step is not required.
      * Uses the {@link ClassLoader} that loaded this class to acquire {@code jar-relocator}.
      *
-     * @param executor the executor that will run the relocations
+     * @param executor the executor that will run the relocation for every dependency, or {@code null} to run sequentially on the current thread
      * @return a future that will complete exceptionally if any of the dependencies fail to
      * relocate otherwise completes when all dependencies are relocated
      * @throws IllegalStateException if dependencies have already been queued for relocation once
@@ -244,7 +244,7 @@ public class DependencyManager {
     /**
      * Relocates all the dependencies with the relocations in this {@link DependencyManager}. This step is not required.
      *
-     * @param executor the executor that will run the relocations, or {@code null} to run it on the current thread
+     * @param executor the executor that will run the relocation for every dependency, or {@code null} to run sequentially on the current thread
      * @param jarRelocatorLoader the {@link ClassLoader} to use to load {@code jar-relocator},
      *                           if this is set to {@code null} the current class loader will be used
      * @return a future that will complete exceptionally if any of the dependencies fail to
@@ -263,7 +263,7 @@ public class DependencyManager {
      * Uses the {@link ClassLoader} that loaded this class to acquire {@code jar-relocator}.
      * If one of the relocation fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
-     * @param executor the executor that will run the relocations
+     * @param executor the executor that will run the relocation for every dependency, or {@code null} to run sequentially on the current thread
      * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for relocation once
      * @see #relocateAll(Executor, ClassLoader)
@@ -278,7 +278,7 @@ public class DependencyManager {
      * Relocates all the dependencies with the relocations in this {@link DependencyManager}. This step is not required.
      * If one of the relocation fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
-     * @param executor the executor that will run the relocations, or {@code null} to run it on the current thread
+     * @param executor the executor that will run the relocation for every dependency, or {@code null} to run sequentially on the current thread
      * @param jarRelocatorLoader the {@link ClassLoader} to use to load {@code jar-relocator}
      * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for relocation once
@@ -287,16 +287,19 @@ public class DependencyManager {
      * @see #relocate(Executor)
      */
     public CompletableFuture<Void>[] relocate(@Nullable Executor executor, @Nullable ClassLoader jarRelocatorLoader) {
-        int currentStep = step.get();
+        int currentStep = step.getAndUpdate(current -> current == 1 ? current : 2);
         if (currentStep == 0) {
-            throw new IllegalArgumentException("Download hasn't been executed");
-        } else if (currentStep != 1) {
-            throw new IllegalArgumentException("Relocate has already been executed");
+            throw new IllegalStateException("Download hasn't been executed");
+        } else if (currentStep == 2) {
+            throw new IllegalStateException("Already relocated");
+        } else if (currentStep == 3) {
+            throw new IllegalStateException("Cannot relocate after loading");
         }
-        step.set(2);
 
         JarRelocatorHelper helper = new JarRelocatorHelper(
-                jarRelocatorLoader != null ? jarRelocatorLoader : getClass().getClassLoader());
+                jarRelocatorLoader != null ? jarRelocatorLoader : getClass().getClassLoader(),
+                relocations
+        );
 
         try {
             logger.relocateStart();
@@ -318,8 +321,8 @@ public class DependencyManager {
     /**
      * Loads all the (potentially relocated) dependencies with provided {@link ClasspathAppender}.
      *
-     * @param executor the executor that will load the dependencies, or {@code null} to run it on the current thread
-     * @param classpathAppender the classpath appender
+     * @param executor the executor that will run the provided classpath appender for every dependency, or {@code null} to run sequentially on the current thread
+     * @param classpathAppender the classpath appender, that will handle loading the file
      * @return a future that will complete exceptionally if any of the dependencies fail to
      * be appended by the provided {@link ClasspathAppender} otherwise completes when all dependencies are relocated
      * @throws IllegalStateException if dependencies have already been queued for load once
@@ -332,17 +335,18 @@ public class DependencyManager {
      * Loads all the (potentially relocated) dependencies with provided {@link ClasspathAppender}.
      * If one of the loads fails, the rest will not be tried and will not get {@link CompletableFuture}s.
      *
-     * @param executor the executor that will load the dependencies, or {@code null} to run it on the current thread
+     * @param executor the executor that will run the provided classpath appender for every dependency, or {@code null} to run sequentially on the current thread
      * @param classpathAppender the classpath appender
      * @return an array containing a {@link CompletableFuture} for at least one dependency but up to one for each dependency
      * @throws IllegalStateException if dependencies have already been queued for load once
      */
     public CompletableFuture<Void>[] load(@Nullable Executor executor, @NotNull ClasspathAppender classpathAppender) {
-        int currentStep = step.get();
+        int currentStep = step.getAndUpdate(current -> current == 0 || current == 3 ? current : 3);
         if (currentStep == 0) {
             throw new IllegalArgumentException("Download hasn't been executed");
+        } else if (currentStep == 3) {
+            throw new IllegalArgumentException("Already loaded");
         }
-        step.set(3);
 
         try {
             logger.loadStart();
@@ -363,10 +367,10 @@ public class DependencyManager {
     }
 
     /**
-     * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded.
+     * Gets the {@link Path} where the given {@link Dependency} will be stored once downloaded or relocated.
      *
      * @param dependency the dependency.
-     * @param relocated if the path should be for the relocated or unrelocated file of the Dependency
+     * @param relocated if the path should be for the relocated or unrelocated (downloaded) file of the Dependency
      * @return the path for the dependency
      */
     @NotNull
@@ -375,9 +379,8 @@ public class DependencyManager {
     }
 
     /**
-     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager},
-     * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
-     * @param relocated relocated paths, otherwise unrelocated paths
+     * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager}. Including ones that do not exist.
+     * @param relocated the paths for all relocated files, otherwise all unrelocated (downloaded) files
      * @return paths to all dependencies, original or relocated
      * @see #getPathForDependency(Dependency, boolean)
      */
@@ -393,6 +396,8 @@ public class DependencyManager {
     /**
      * Gets {@link Path}s to all {@link Dependency Dependencies} in this {@link DependencyManager},
      * optionally also including the relocated paths if {@code includeRelocated} is set to {@code true}.
+     * Including ones that do not exist.
+     *
      * @param includeRelocated if relocated paths should also be included
      * @return paths to all dependencies (and optionally relocated dependencies)
      * @see #getPathForDependency(Dependency, boolean)
@@ -554,7 +559,7 @@ public class DependencyManager {
         Path relocatedFile = getPathForDependency(dependency, true);
 
         try {
-            helper.run(dependencyFile, relocatedFile, relocations);
+            helper.run(dependencyFile, relocatedFile);
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Failed to run relocation", e.getCause());
         } catch (ReflectiveOperationException e) {
@@ -590,34 +595,33 @@ public class DependencyManager {
         private final Constructor<?> relocatorConstructor;
         private final Method relocatorRunMethod;
 
-        private final Constructor<?> relocationConstructor;
+        private final List<Object> mappedRelocations;
 
-        public JarRelocatorHelper(ClassLoader classLoader) {
+        public JarRelocatorHelper(ClassLoader classLoader, List<Relocation> relocations) {
             try {
                 Class<?> relocatorClass = classLoader.loadClass("me.lucko.jarrelocator.JarRelocator");
                 this.relocatorConstructor = relocatorClass.getConstructor(File.class, File.class, Collection.class);
                 this.relocatorRunMethod = relocatorClass.getMethod("run");
 
                 Class<?> relocationClass = classLoader.loadClass("me.lucko.jarrelocator.Relocation");
-                this.relocationConstructor = relocationClass.getConstructor(String.class, String.class, Collection.class, Collection.class);
-            } catch (ClassNotFoundException | NoSuchMethodException e) {
+                Constructor<?> relocationConstructor = relocationClass.getConstructor(String.class, String.class, Collection.class, Collection.class);
+
+                this.mappedRelocations = new ArrayList<>();
+                for (Relocation relocation : relocations) {
+                    Object mapped = relocationConstructor.newInstance(
+                            relocation.getPattern(),
+                            relocation.getShadedPattern(),
+                            relocation.getIncludes(),
+                            relocation.getExcludes()
+                    );
+                    mappedRelocations.add(mapped);
+                }
+            } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("Failed to load jar-relocator from the provided ClassLoader", e);
             }
         }
 
-        public void run(Path from, Path to, List<Relocation> relocations) throws ReflectiveOperationException {
-            List<Object> mappedRelocations = new ArrayList<>();
-
-            for (Relocation relocation : relocations) {
-                Object mapped = relocationConstructor.newInstance(
-                        relocation.getPattern(),
-                        relocation.getShadedPattern(),
-                        relocation.getIncludes(),
-                        relocation.getExcludes()
-                );
-                mappedRelocations.add(mapped);
-            }
-
+        public void run(Path from, Path to) throws ReflectiveOperationException {
             Object relocator = relocatorConstructor.newInstance(from.toFile(), to.toFile(), mappedRelocations);
             relocatorRunMethod.invoke(relocator);
         }
