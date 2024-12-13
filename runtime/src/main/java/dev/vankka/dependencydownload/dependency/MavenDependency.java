@@ -32,7 +32,7 @@ import java.util.Objects;
 
 public class MavenDependency implements Dependency {
 
-    String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
+    private static final String MAVEN_PATH_FORMAT = "%s/%s/%s/%s";
 
     private final String groupId;
     private final String artifactId;
