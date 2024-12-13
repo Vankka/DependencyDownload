@@ -287,7 +287,7 @@ public class DependencyManager {
      * @see #relocate(Executor)
      */
     public CompletableFuture<Void>[] relocate(@Nullable Executor executor, @Nullable ClassLoader jarRelocatorLoader) {
-        int currentStep = step.getAndUpdate(current -> current == 1 ? current : 2);
+        int currentStep = step.getAndUpdate(current -> current == 1 ? 2 : current);
         if (currentStep == 0) {
             throw new IllegalStateException("Download hasn't been executed");
         } else if (currentStep == 2) {
