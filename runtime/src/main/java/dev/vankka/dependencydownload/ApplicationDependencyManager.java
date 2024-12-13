@@ -124,7 +124,7 @@ public class ApplicationDependencyManager {
      * and will include all the relocations from this manager.
      *
      * @param dependencies the dependencies to include
-     * @return the {@link DependencyManager} to load in the dependencies
+     * @return a new {@link DependencyManager} to load in the dependencies
      */
     @CheckReturnValue
     @NotNull
@@ -146,14 +146,14 @@ public class ApplicationDependencyManager {
      * and will include all the relocations from this manager.
      *
      * @param manager the manager to get dependencies and relocations from
-     * @return a new {@link DependencyManager} to load in the dependencies, or the same manager if it already loaded
+     * @return a new {@link DependencyManager} to load in the dependencies, or if the provided manager is already loaded it will be returned instead
      */
     @NotNull
     public DependencyManager include(@NotNull DependencyManager manager) {
         addRelocations(manager.getRelocations());
         List<Dependency> dependencies = addMissingDependencies(manager.getDependencies());
         if (manager.isLoaded()) {
-            return dependencyManager;
+            return manager;
         }
 
         DependencyManager dependencyManager = new DependencyManager(manager.getDependencyPathProvider());
