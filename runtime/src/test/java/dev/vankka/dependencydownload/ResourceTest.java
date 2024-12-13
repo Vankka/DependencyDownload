@@ -57,7 +57,6 @@ public class ResourceTest {
     public void invalidResourcesTest() {
         assertThrows(IllegalArgumentException.class, () -> parseResource("invalid1.txt")); // No algorithm
         assertThrows(IllegalArgumentException.class, () -> parseResource("invalid2.txt")); // No hash
-        assertThrows(IllegalArgumentException.class, () -> parseResource("invalid2.txt")); // No hash
         assertThrows(IllegalArgumentException.class, () -> parseResource("invalid3.txt")); // No version
         assertThrows(IllegalArgumentException.class, () -> parseResource("invalid4.txt")); // No relocation replacement
     }
