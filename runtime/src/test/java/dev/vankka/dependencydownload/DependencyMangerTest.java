@@ -81,15 +81,21 @@ public class DependencyMangerTest {
         assertEquals(Collections.singletonList(REAL_DEPENDENCY), dependencyManager.getDependencies(), "dependencies match");
         assertEquals(Collections.singletonList(REAL_RELOCATION), dependencyManager.getRelocations(), "relocations match");
 
+        assertThrows(IllegalArgumentException.class, () -> dependencyManager.downloadAll(null, Collections.emptyList()));
+        assertThrows(IllegalStateException.class, () -> dependencyManager.relocateAll(null));
+        assertThrows(IllegalStateException.class, () -> dependencyManager.loadAll(null, url -> fail("Load classpath appender called")));
+
         CompletableFuture<Void> download = dependencyManager.downloadAll(null, Collections.singletonList(REAL_REPOSITORY));
         assertNotNull(download, "download future is not null");
         assertTrue(download.isDone(), "download future is done");
         assertFalse(download.isCompletedExceptionally(), "download did not fail");
+        assertThrows(IllegalStateException.class, () -> dependencyManager.downloadAll(null, Collections.singletonList(REAL_REPOSITORY)));
 
         CompletableFuture<Void> relocate = dependencyManager.relocateAll(null);
         assertNotNull(relocate, "relocate future is not null");
         assertTrue(relocate.isDone(), "relocate future is done");
         assertFalse(relocate.isCompletedExceptionally(), "relocate did not fail");
+        assertThrows(IllegalStateException.class, () -> dependencyManager.relocateAll(null));
 
         AtomicInteger calledTimes = new AtomicInteger(0);
         CompletableFuture<Void> load = dependencyManager.loadAll(null, url -> calledTimes.incrementAndGet());
@@ -98,6 +104,7 @@ public class DependencyMangerTest {
         assertFalse(load.isCompletedExceptionally(), "load did not fail");
         assertEquals(1, calledTimes.get(), "ClasspathAppender called only once");
         assertTrue(dependencyManager.isLoaded(), "DependencyManager.isLoaded");
+        assertThrows(IllegalStateException.class, () -> dependencyManager.loadAll(null, url -> fail("Load classpath appender called")));
     }
 
     @Test

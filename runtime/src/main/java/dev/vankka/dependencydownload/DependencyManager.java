@@ -350,9 +350,9 @@ public class DependencyManager {
         // If step is 1 (download), 2 (relocate) change to 3 (load), otherwise keep current
         int currentStep = step.getAndUpdate(current -> current == 0 || current == 3 ? current : 3);
         if (currentStep == 0) {
-            throw new IllegalArgumentException("Download hasn't been executed");
+            throw new IllegalStateException("Download hasn't been executed");
         } else if (currentStep == 3) {
-            throw new IllegalArgumentException("Already loaded");
+            throw new IllegalStateException("Already loaded");
         }
 
         try {
