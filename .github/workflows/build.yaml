@@ -23,3 +23,5 @@ jobs:
         with:
           name: build-artifacts
           path: "**/build/libs/*.jar"
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
