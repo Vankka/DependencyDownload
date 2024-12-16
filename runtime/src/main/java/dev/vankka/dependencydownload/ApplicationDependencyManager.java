@@ -58,7 +58,25 @@ public class ApplicationDependencyManager {
      * @param logger the logger to use
      */
     public ApplicationDependencyManager(@NotNull DependencyPathProvider dependencyPathProvider, Logger logger) {
-        this.dependencyManager = new DependencyManager(dependencyPathProvider);
+        this.dependencyManager = new DependencyManager(dependencyPathProvider, logger);
+    }
+
+    /**
+     * Gets the dependency path provider for this {@link ApplicationDependencyManager}.
+     * @return the instance of {@link DependencyPathProvider}
+     */
+    @NotNull
+    public DependencyPathProvider getDependencyPathProvider() {
+        return dependencyManager.getDependencyPathProvider();
+    }
+
+    /**
+     * Gets the logger being used by this {@link ApplicationDependencyManager}.
+     * @return the instance of {@link Logger} being used
+     */
+    @NotNull
+    public Logger getLogger() {
+        return dependencyManager.getLogger();
     }
 
     /**
@@ -131,7 +149,7 @@ public class ApplicationDependencyManager {
     public DependencyManager include(@NotNull Collection<Dependency> dependencies) {
         dependencies = addMissingDependencies(dependencies);
 
-        DependencyManager manager = new DependencyManager(dependencyManager.getDependencyPathProvider());
+        DependencyManager manager = new DependencyManager(getDependencyPathProvider(), getLogger());
         manager.addDependencies(dependencies);
         synchronized (this.dependencyManager) {
             dependencyManager.addRelocations(this.dependencyManager.getRelocations());
@@ -140,13 +158,14 @@ public class ApplicationDependencyManager {
     }
 
     /**
-     * Includes the dependencies and relocations from the provided {@link DependencyManager}, the {@link DependencyPathProvider} will be preserved.
+     * Includes the dependencies and relocations from the provided {@link DependencyManager},
+     * the {@link DependencyPathProvider} and {@link Logger} will be preserved from the provided {@link DependencyManager}.
      * <p>
      * The returned {@link DependencyManager} will only include dependencies that have not been downloaded yet,
-     * and will include all the relocations from this manager.
+     * and will include all the relocations from this manager (including ones from the provided {@link DependencyManager}).
      *
      * @param manager the manager to get dependencies and relocations from
-     * @return a new {@link DependencyManager} to load in the dependencies, or if the provided manager is already loaded it will be returned instead
+     * @return a new {@link DependencyManager} to load in the dependencies, or if the provided manager has already been loaded, it will be returned instead
      */
     @NotNull
     public DependencyManager include(@NotNull DependencyManager manager) {
@@ -156,7 +175,7 @@ public class ApplicationDependencyManager {
             return manager;
         }
 
-        DependencyManager dependencyManager = new DependencyManager(manager.getDependencyPathProvider());
+        DependencyManager dependencyManager = new DependencyManager(manager.getDependencyPathProvider(), manager.getLogger());
         dependencyManager.addDependencies(dependencies);
         synchronized (this.dependencyManager) {
             dependencyManager.addRelocations(this.dependencyManager.getRelocations());

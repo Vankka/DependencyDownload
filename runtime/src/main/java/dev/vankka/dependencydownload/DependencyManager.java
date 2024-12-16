@@ -91,6 +91,24 @@ public class DependencyManager {
     }
 
     /**
+     * Gets the dependency path provider for this {@link DependencyManager}.
+     * @return the {@link DependencyPathProvider} being used
+     */
+    @NotNull
+    public DependencyPathProvider getDependencyPathProvider() {
+        return dependencyPathProvider;
+    }
+
+    /**
+     * Gets the logger being used by this {@link DependencyManager}.
+     * @return the {@link Logger} being used
+     */
+    @NotNull
+    public Logger getLogger() {
+        return logger;
+    }
+
+    /**
      * Adds dependencies to this {@link DependencyManager}.
      * @param dependencies the dependencies to add
      * @throws IllegalStateException if this method is executed after downloading
@@ -154,16 +172,6 @@ public class DependencyManager {
     @NotNull
     public List<Relocation> getRelocations() {
         return Collections.unmodifiableList(relocations);
-    }
-
-    /**
-     * Gets the dependency path provider for this {@link DependencyManager}.
-     * @return the instance of {@link DependencyPathProvider} or {@code null}
-     * @see DependencyPathProvider
-     */
-    @NotNull
-    public DependencyPathProvider getDependencyPathProvider() {
-        return dependencyPathProvider;
     }
 
     /**
