@@ -149,12 +149,12 @@ public class ApplicationDependencyManager {
     public DependencyManager include(@NotNull Collection<Dependency> dependencies) {
         dependencies = addMissingDependencies(dependencies);
 
-        DependencyManager manager = new DependencyManager(getDependencyPathProvider(), getLogger());
-        manager.addDependencies(dependencies);
+        DependencyManager dependencyManager = new DependencyManager(getDependencyPathProvider(), getLogger());
+        dependencyManager.addDependencies(dependencies);
         synchronized (this.dependencyManager) {
             dependencyManager.addRelocations(this.dependencyManager.getRelocations());
         }
-        return manager;
+        return dependencyManager;
     }
 
     /**
