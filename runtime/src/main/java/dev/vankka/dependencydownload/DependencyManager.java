@@ -473,11 +473,11 @@ public class DependencyManager {
             Runnable run = () -> {
                 try {
                     boolean stepPerformed = runnable.run(dependency);
-                    future.complete(null);
-
                     if (stepPerformed) {
                         successLog.accept(dependency);
                     }
+
+                    future.complete(null);
                 } catch (Throwable t) {
                     future.completeExceptionally(dependencyException.apply(dependency, t));
                     failLog.accept(dependency, t);
