@@ -11,17 +11,13 @@ Looking for something to use with Minecraft? [Check out MinecraftDependencyDownl
 
 ## Dependency
 
-## ⚠️ Group Id & Artifact Id change
-
-The group id & artifact were changed in version `1.2.1` from `dev.vankka.dependencydownload:<module>` to `dev.vankka:dependencydownload-<module>`
-
 ```groovy
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'dev.vankka:dependencydownload-runtime:1.3.1'
+    implementation 'dev.vankka:dependencydownload-runtime:2.0.0'
 }
 ```
 
@@ -31,12 +27,12 @@ dependencies {
 ```groovy
 repositories {
     maven {
-        url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+        url 'https://central.sonatype.com/repository/maven-snapshots/'
     }
 }
 
 dependencies {
-    implementation 'dev.vankka:dependencydownload-runtime:1.3.2-SNAPSHOT'
+    implementation 'dev.vankka:dependencydownload-runtime:2.0.1-SNAPSHOT'
 }
 ```
 </details>
@@ -59,7 +55,7 @@ manager.loadAll(executor, classpathAppender).join(); // ClasspathAppender is a i
 ## Gradle plugin
 ```groovy
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.3.1'
+    id 'dev.vankka.dependencydownload.plugin' version '2.0.0'
 }
 
 dependencies {
@@ -97,7 +93,7 @@ Bring the jar minifying to the next extreme
 ```groovy
 import dev.vankka.dependencydownload.task.GenerateDependencyDownloadResourceTask
 plugins {
-    id 'dev.vankka.dependencydownload.plugin' version '1.3.1'
+    id 'dev.vankka.dependencydownload.plugin' version '2.0.0'
 }
 
 configurations {
@@ -109,7 +105,7 @@ repositories {
 }
 
 dependencies {
-    implementation('dev.vankka:dependencydownload-runtime:1.3.1') {
+    implementation('dev.vankka:dependencydownload-runtime:2.0.0') {
         exclude module: 'jar-relocator'
     }
     jarRelocator 'me.lucko:jar-relocator:1.4'
